@@ -1,0 +1,54 @@
+# browse file contents ...
+vim kube-deployment.libsonnet
+jsonnet kube-deployment.libsonnet
+cat kube-deployment.libsonnet
+cat nginx-base.jsonnet
+
+# render with jsonnet CLI (json output)
+jsonnet kube-deployment.libsonnet
+jsonnet nginx-base.jsonnet
+jsonnet nginx-base.jsonnet |less
+
+# render with kubecfg CLI (yaml output)
+kubecfg show nginx-base.jsonnet
+
+# validate against API endpoint
+kubecfg validate nginx-base.jsonnet
+echo $?
+
+#
+cat nginx-production.jsonnet
+kubecfg show nginx-production.jsonnet
+kubecfg validate nginx-production.jsonnet
+
+# Then from inside vim:
+# :vsp nginx-production.jsonnet
+vim nginx-production-v2.jsonnet
+
+# Show rendered diff production vs production-v2
+diff -u  <(kubecfg show nginx-production.jsonnet ) <(kubecfg show nginx-production-v2.jsonnet ) |colordiff |less -REX
+
+# deploy production-v2
+kubecfg validate nginx-production-v2.jsonnet
+kubecfg update nginx-production-v2.jsonnet
+kubectl get pod --namespace=app-production
+
+# also deploy staging (no-op for already deployed production-v2)
+kubecfg update nginx-staging.jsonnet nginx-production-v2.jsonnet
+
+# see diff against running - note lotsa "runtime" values put there by kubernetes
+unbuffer kubecfg diff nginx-staging.jsonnet nginx-production-v2.jsonnet  | less -R
+# see only the diffs agaist spec'd values -> *nil* 
+kubecfg diff --diff-strategy subset nginx-staging.jsonnet nginx-production-v2.jsonnet
+
+# gc-tag existing with "nginx-all"
+kubecfg update --gc-tag=nginx-all nginx-staging.jsonnet nginx-production-v2.jsonnet
+# see metadata for added annotation
+kubectl get deployment --namespace=app-production my-nginx -ojson | jq .metadata
+
+# get rid of staging (garbage collect it, from being absent in the `kubecfg update` invocation)
+kubecfg update --gc-tag=nginx-all nginx-production-v2.jsonnet
+
+# nil jsonnet to get rid of everything with this tag ...
+cat none.jsonnet
+kubecfg update --gc-tag=nginx-all none.jsonnet
