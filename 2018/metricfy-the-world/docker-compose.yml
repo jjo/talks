@@ -21,6 +21,8 @@ services:
       - pushgateway
   metrics_pusher:
     image: alpine:3.8
+    environment:
+      - PUSHGATEWAY_URL=http://pushgateway:9091
     command:
       - sh
       - -c
