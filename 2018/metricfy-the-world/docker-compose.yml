@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  pushgateway:
+    image: prom/pushgateway:v0.6.0
+    command:
+      - --persistence.file=/pushgateway/pushgateway.data
+      - --persistence.interval=30s
+    ports:
+      - 9091:9091
+    volumes:
+      - pushgateway-data:/pushgateway
+  prometheus:
+    image: prom/prometheus:v2.4.3
+    ports:
+      - 9090:9090
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    links:
+      - pushgateway
+  metrics_pusher:
+    image: alpine:3.8
+    command:
+      - sh
+      - -c
+      - |
+        until sh -c 'apk update && apk add curl'; do sleep 1; done
+        exec sh /metrics-pusher.sh
+    volumes:
+      - ./metrics-pusher.sh:/metrics-pusher.sh
+    links:
+      - pushgateway
+
+volumes:
+  prometheus-data:
+  pushgateway-data:
