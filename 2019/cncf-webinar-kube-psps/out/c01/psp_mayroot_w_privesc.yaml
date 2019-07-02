@@ -1,0 +1,34 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations: {}
+  labels:
+    name: 70-mayroot-w-privesc
+  name: 70-mayroot-w-privesc
+spec:
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+  - '*'
+  forbiddenSysctls:
+  - '*'
+  fsGroup:
+    rule: RunAsAny
+  hostIPC: false
+  hostNetwork: false
+  hostPID: false
+  hostPorts: []
+  privileged: false
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+  - configMap
+  - secret
+  - emptyDir
+  - projected
+  - downwardAPI
+  - persistentVolumeClaim
+

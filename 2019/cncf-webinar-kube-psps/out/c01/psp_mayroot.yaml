@@ -1,0 +1,34 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations: {}
+  labels:
+    name: 60-mayroot
+  name: 60-mayroot
+spec:
+  allowPrivilegeEscalation: false
+  allowedCapabilities:
+  - '*'
+  forbiddenSysctls:
+  - '*'
+  fsGroup:
+    rule: RunAsAny
+  hostIPC: false
+  hostNetwork: false
+  hostPID: false
+  hostPorts: []
+  privileged: false
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+  - configMap
+  - secret
+  - emptyDir
+  - projected
+  - downwardAPI
+  - persistentVolumeClaim
+

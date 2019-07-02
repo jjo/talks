@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  annotations: {}
+  labels:
+    name: psp-mayroot
+  name: psp:mayroot
+rules:
+- apiGroups:
+  - policy
+  resourceNames:
+  - 60-mayroot
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
+

@@ -1,0 +1,36 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations: {}
+  labels:
+    name: 32-openshift-restricted
+  name: 32-openshift-restricted
+spec:
+  allowPrivilegeEscalation: false
+  allowedCapabilities: []
+  forbiddenSysctls:
+  - '*'
+  fsGroup:
+    rule: RunAsAny
+  hostIPC: false
+  hostNetwork: false
+  hostPID: false
+  hostPorts: []
+  privileged: false
+  readOnlyRootFilesystem: false
+  requiredDropCapabilities:
+  - ALL
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+  - configMap
+  - secret
+  - emptyDir
+  - projected
+  - downwardAPI
+  - persistentVolumeClaim
+
