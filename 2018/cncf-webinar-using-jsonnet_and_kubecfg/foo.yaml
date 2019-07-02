@@ -1,0 +1,72 @@
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    name: nginx
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      name: nginx
+  template:
+    metadata:
+      labels:
+        name: nginx
+    spec:
+      containers:
+      - image: nginx:1.12
+        name: nginx
+        ports:
+        - containerPort: 80
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+        restartPolicy: Never
+      - image: busybox
+        name: sidecar
+        command: ["sleep", "3600"]
+        ports:
+        - containerPort: 80
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+        restartPolicy: Never
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: nginx-rw
+  name: nginx-rw
+
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    name: nginx
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  type: ClusterIP
+  clusterIP: None
+  labels:
+    name: nginx-ro
+  name: nginx-ro
+
+spec:
+  ports:
+  - port: 90
+    targetPort: 90
+  selector:
+    name: nginx
