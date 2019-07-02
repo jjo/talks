@@ -9,7 +9,7 @@ rules:
 - apiGroups:
   - policy
   resourceNames:
-  - 32-openshift-restricted
+  - 30-openshift-restricted
   resources:
   - podsecuritypolicies
   verbs:

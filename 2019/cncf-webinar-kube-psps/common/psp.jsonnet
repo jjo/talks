@@ -14,12 +14,13 @@ local psp = {
   //
   //   PSP                     ClusterRole
   //   20-restricted           restricted
-  //   30-pks-restricted       pks-restricted
-  //   32-openshift-restricted openshift-restricted
+  //   | \ 30-pks-restricted       pks-restricted
+  //   | \ 30-openshift-restricted openshift-restricted
   //   40-nonroot              nonroot
-  //   60-mayroot              mayroot     (cluster-wide default)
-  //   70-mayroot_w_privesc    mayroot
-  //   80-privileged           privileged
+  //   |
+  //   60-mayroot              mayroot     ("safe" root, our cluster-wide default)
+  //   |
+  //   80-privileged           privileged  (for "system" workloads)
 
   // psp_privileged: allow all: privileged, root ok, linux host namespaces (net, PID, etc)
   // use-case: workloads requiring host mounts, networking (e.g. CNI pods), etc
@@ -56,14 +57,6 @@ local psp = {
     },
   },
 
-  // psp_mayroot_w_privesc: allow root and privilege escalation but void using/modifying host resources
-  // use-case: most typical root containers
-  psp_mayroot_w_privesc: $.psp_mayroot + $.lib.OrderedPSP(70, "mayroot-w-privesc") {
-    spec+: {
-      allowPrivilegeEscalation: true,
-    },
-  },
-
   // psp_nonroot: additionally forcing non root
   // use-case: non-root, similar to openshift restrictions
   psp_nonroot: $.psp_mayroot + $.lib.OrderedPSP(40, "nonroot") {
@@ -97,7 +90,7 @@ local psp = {
   },
 
   // openshift-restricted: trying to mimic openshift as much as possible
-  psp_openshift_restricted: self.psp_restricted + $.lib.OrderedPSP(32, "openshift-restricted") {
+  psp_openshift_restricted: self.psp_restricted + $.lib.OrderedPSP(30, "openshift-restricted") {
     spec+: {
       readOnlyRootFilesystem: false,
       fsGroup: $.lib.runAsAny,
@@ -107,7 +100,6 @@ local psp = {
 
   // respective ClusterRoles for each PSP above
   psp_cr_privileged: $.lib.ClusterRolePSP($.psp_privileged),
-  psp_cr_mayroot_w_privesc: $.lib.ClusterRolePSP($.psp_mayroot_w_privesc),
   psp_cr_mayroot: $.lib.ClusterRolePSP($.psp_mayroot),
   psp_cr_nonroot: $.lib.ClusterRolePSP($.psp_nonroot),
   psp_cr_restricted: $.lib.ClusterRolePSP($.psp_restricted),
