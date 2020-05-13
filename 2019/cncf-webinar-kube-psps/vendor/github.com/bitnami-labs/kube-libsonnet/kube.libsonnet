@@ -53,6 +53,13 @@
 // (client-side, and gives better line information).
 
 {
+  // resource contructors will use kinds/versions/fields compatible at least with version:
+  minKubeVersion: {
+    major: 1,
+    minor: 9,
+    version: "%s.%s" % [self.major, self.minor],
+  },
+
   // Returns array of values from given object.  Does not include hidden fields.
   objectValues(o):: [o[field] for field in std.objectFields(o)],
 
@@ -111,6 +118,8 @@
     std.join("", [remapChar(c, "a", "z", "A") for c in std.stringChars(s)])
   ),
 
+  boolXor(x, y):: ((if x then 1 else 0) + (if y then 1 else 0) == 1),
+
   _Object(apiVersion, kind, name):: {
     local this = self,
     apiVersion: apiVersion,
@@ -164,6 +173,7 @@
       ports: [
         {
           port: service.port,
+          name: service.target_pod.spec.containers[0].ports[0].name,
           targetPort: service.target_pod.spec.containers[0].ports[0].containerPort,
         },
       ],
@@ -203,6 +213,7 @@
         },
       },
       accessModes: ["ReadWriteOnce"],
+      [if pvc.storageClass != null then "storageClassName"]: pvc.storageClass,
     },
   },
 
@@ -212,7 +223,15 @@
     imagePullPolicy: if std.endsWith(self.image, ":latest") then "Always" else "IfNotPresent",
 
     envList(map):: [
-      if std.type(map[x]) == "object" then { name: x, valueFrom: map[x] } else { name: x, value: map[x] }
+      if std.type(map[x]) == "object"
+      then {
+        name: x,
+        valueFrom: map[x],
+      } else {
+        // Let `null` value stay as such (vs string-ified)
+        name: x,
+        value: if map[x] == null then null else std.toString(map[x]),
+      }
       for x in std.objectFields(map)
     ],
 
@@ -237,7 +256,10 @@
     local this = self,
     target_pod:: error "target_pod required",
     spec: {
-      minAvailable: 1,
+      assert $.boolXor(
+        std.objectHas(self, "minAvailable"),
+        std.objectHas(self, "maxUnavailable")
+      ) : "PDB '%s': exactly one of minAvailable/maxUnavailable required" % name,
       selector: {
         matchLabels: this.target_pod.metadata.labels,
       },
@@ -255,7 +277,10 @@
     containers_:: {},
 
     local container_names_ordered = [self.default_container] + [n for n in container_names if n != self.default_container],
-    containers: [{ name: $.hyphenate(name) } + self.containers_[name] for name in container_names_ordered if self.containers_[name] != null],
+    containers: (
+      assert std.length(self.containers_) > 0 : "Pod must have at least one container (via containers_ map)";
+      [{ name: $.hyphenate(name) } + self.containers_[name] for name in container_names_ordered if self.containers_[name] != null]
+    ),
 
     // Note initContainers are inherently ordered, and using this
     // named object will lose that ordering.  If order matters, then
@@ -272,7 +297,7 @@
 
     terminationGracePeriodSeconds: 30,
 
-    assert std.length(self.containers) > 0 : "must have at least one container",
+    assert std.length(self.containers) > 0 : "Pod must have at least one container (via containers array)",
 
     // Return an array of pod's ports numbers
     ports(proto):: [
@@ -330,7 +355,7 @@
 
   // subtype of EnvVarSource
   ConfigMapRef(configmap, key): {
-    assert std.objectHas(configmap.data, key) : "%s not in configmap.data" % [key],
+    assert std.objectHas(configmap.data, key) : "ConfigMap '%s' doesn't have '%s' field in configmap.data" % [configmap.metadata.name, key],
     configMapKeyRef: {
       name: configmap.metadata.name,
       key: key,
@@ -347,7 +372,7 @@
 
   // subtype of EnvVarSource
   SecretKeyRef(secret, key): {
-    assert std.objectHas(secret.data, key) : "%s not in secret.data" % [key],
+    assert std.objectHas(secret.data, key) : "Secret '%s' doesn't have '%s' field in secret.data" % [secret.metadata.name, key],
     secretKeyRef: {
       name: secret.metadata.name,
       key: key,
@@ -370,7 +395,7 @@
     },
   },
 
-  Deployment(name): $._Object("apps/v1beta2", "Deployment", name) {
+  Deployment(name): $._Object("apps/v1", "Deployment", name) {
     local deployment = self,
 
     spec: {
@@ -412,6 +437,9 @@
       // NB: Upstream default is 0
       minReadySeconds: 30,
 
+      // NB: Regular k8s default is to keep all revisions
+      revisionHistoryLimit: 10,
+
       replicas: 1,
     },
   },
@@ -437,7 +465,7 @@
     },
   },
 
-  StatefulSet(name): $._Object("apps/v1beta2", "StatefulSet", name) {
+  StatefulSet(name): $._Object("apps/v1", "StatefulSet", name) {
     local sset = self,
 
     spec: {
@@ -489,7 +517,6 @@
     },
   },
 
-  // NB: kubernetes >= 1.8.x has batch/v1beta1 (olders were batch/v2alpha1)
   CronJob(name): $._Object("batch/v1beta1", "CronJob", name) {
     local cronjob = self,
 
@@ -503,7 +530,6 @@
           },
         },
       },
-
       schedule: error "Need to provide spec.schedule",
       successfulJobsHistoryLimit: 10,
       failedJobsHistoryLimit: 20,
@@ -520,12 +546,11 @@
         restartPolicy: "OnFailure",
       },
     },
-
     completions: 1,
     parallelism: 1,
   },
 
-  DaemonSet(name): $._Object("apps/v1beta2", "DaemonSet", name) {
+  DaemonSet(name): $._Object("apps/v1", "DaemonSet", name) {
     local ds = self,
     spec: {
       updateStrategy: {
@@ -548,7 +573,7 @@
     },
   },
 
-  Ingress(name): $._Object("extensions/v1beta1", "Ingress", name) {
+  Ingress(name): $._Object("networking.k8s.io/v1beta1", "Ingress", name) {
     spec: {},
 
     local rel_paths = [
@@ -630,18 +655,14 @@
     kind: "ClusterRoleBinding",
   },
 
-  // NB: datalines_ can be used to reduce boilerplate importstr as:
-  // kubectl get secret ... -ojson mysec | kubeseal | jq -r .spec.data > mysec-ssdata.txt
-  //   datalines_: importstr "mysec-ssddata.txt"
+  // NB: encryptedData can be imported into a SealedSecret as follows:
+  // kubectl get secret ... -ojson mysec | kubeseal | jq -r .spec.encryptedData > sealedsecret.json
+  //   encryptedData: std.parseJson(importstr "sealedsecret.json")
   SealedSecret(name): $._Object("bitnami.com/v1alpha1", "SealedSecret", name) {
     spec: {
-      data:
-        if self.datalines_ != ""
-        then std.join("", std.split(self.datalines_, "\n"))
-        else error "data or datalines_ required (output from: kubeseal | jq -r .spec.data)",
-      datalines_:: "",
+      encryptedData: {},
     },
-    assert std.base64Decode(self.spec.data) != "",
+    assert std.length(std.objectFields(self.spec.encryptedData)) != 0 : "SealedSecret '%s' has empty encryptedData field" % name,
   },
 
   // NB: helper method to access several Kubernetes objects podRef,
@@ -692,6 +713,36 @@
       ingress_:: {},
       egress: $.objectValues(self.egress_),
       egress_:: {},
+      podSelector: {},
+    },
+  },
+
+  VerticalPodAutoscaler(name):: $._Object("autoscaling.k8s.io/v1beta2", "VerticalPodAutoscaler", name) {
+    local vpa = self,
+
+    target:: error "target required",
+
+    spec: {
+      targetRef: $.CrossVersionObjectReference(vpa.target),
+
+      updatePolicy: {
+        updateMode: "Auto",
+      },
+    },
+  },
+  // Helper function to ease VPA creation as e.g.:
+  // foo_vpa:: kube.createVPAFor($.foo_deploy)
+  createVPAFor(target, mode="Auto"):: $.VerticalPodAutoscaler(target.metadata.name) {
+    target:: target,
+
+    metadata+: {
+      namespace: target.metadata.namespace,
+      labels+: target.metadata.labels,
+    },
+    spec+: {
+      updatePolicy+: {
+        updateMode: mode,
+      },
     },
   },
 }

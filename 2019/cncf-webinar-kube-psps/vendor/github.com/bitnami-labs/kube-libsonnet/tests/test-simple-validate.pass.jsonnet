@@ -1,5 +1,6 @@
 local bitnami = import "../bitnami.libsonnet";
 local kube = import "../kube.libsonnet";
+local utils = import "../utils.libsonnet";
 
 local stack = {
   namespace:: "foons",
@@ -65,6 +66,7 @@ local stack = {
           image: "nginx:1.12",
           env_+: {
             my_secret: kube.SecretKeyRef($.secret, "sec_key"),
+            other_key: null,
           },
           ports_+: {
             http: { containerPort: 80 },
@@ -84,13 +86,22 @@ local stack = {
   // NB: all object below needing to spec a Pod will just
   // use above particular pod manifest just for convenience
   deploy: kube.Deployment($.name + "-deploy") {
+    local this = self,
     metadata+: { namespace: $.namespace },
     spec+: {
       template+: {
         spec+: $.pod.spec {
+          affinity+: utils.weakNodeDiversity(this.spec.selector),
           serviceAccountName: $.sa.metadata.name,
         },
       },
+    },
+  },
+
+  deploy_pdb: kube.PodDisruptionBudget($.name + "-deploy-pdb") {
+    target_pod: $.deploy.spec.template,
+    spec+: {
+      minAvailable: 1,
     },
   },
 
@@ -198,6 +209,18 @@ local stack = {
       },
     },
   },
+  // NB: these VPAs need the VPA CRD added to the cluster, for local k3s testing
+  // we add it via the `init-kube` Makefile target using `init-kube.jsonnet`
+  vpa: kube.VerticalPodAutoscaler($.name + "-vpa") {
+    spec+: {
+      targetRef: {
+        apiVersion: "apps/v1",
+        kind: "Deployment",
+        name: "foo-deploy",
+      },
+    },
+  },
+  deploy_vpa: kube.createVPAFor($.deploy),
 };
 
 kube.List() {

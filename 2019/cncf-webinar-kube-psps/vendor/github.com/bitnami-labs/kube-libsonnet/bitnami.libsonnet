@@ -1,5 +1,5 @@
 // Generic stuff is in kube.libsonnet - this file contains
-// additional AWS or Bitnami -specific conventions.
+// bitnami-specific conventions.
 
 local kube = import "kube.libsonnet";
 
@@ -71,6 +71,7 @@ local perCloudSvcSpec(cloud) = (
     },
     cm_dns_metadata:: {
       annotations+: {
+        "cert-manager.io/cluster-issuer": "letsencrypt-prod-dns",
         "certmanager.k8s.io/cluster-issuer": "letsencrypt-prod-dns",
         "certmanager.k8s.io/acme-challenge-type": "dns01",
         "certmanager.k8s.io/acme-dns01-provider": "default",
@@ -78,6 +79,7 @@ local perCloudSvcSpec(cloud) = (
     },
     cm_http_metadata:: {
       annotations+: {
+        "cert-manager.io/cluster-issuer": "letsencrypt-prod-http",
         "certmanager.k8s.io/cluster-issuer": "letsencrypt-prod-http",
       },
     },
@@ -92,8 +94,6 @@ local perCloudSvcSpec(cloud) = (
         {
           hosts: std.set([r.host for r in ing.spec.rules]),
           secretName: ing.secretName,
-
-          assert std.length(self.hosts) <= 1 : "kube-cert-manager only supports one host per secret - make a separate Ingress resource",
         },
       ],
 

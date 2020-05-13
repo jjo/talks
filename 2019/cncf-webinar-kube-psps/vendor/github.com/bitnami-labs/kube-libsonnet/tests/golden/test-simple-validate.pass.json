@@ -68,7 +68,7 @@
          }
       },
       {
-         "apiVersion": "apps/v1beta2",
+         "apiVersion": "apps/v1",
          "kind": "Deployment",
          "metadata": {
             "annotations": { },
@@ -81,6 +81,7 @@
          "spec": {
             "minReadySeconds": 30,
             "replicas": 1,
+            "revisionHistoryLimit": 10,
             "selector": {
                "matchLabels": {
                   "name": "foo-deploy"
@@ -101,6 +102,45 @@
                   }
                },
                "spec": {
+                  "affinity": {
+                     "podAntiAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                           {
+                              "podAffinityTerm": {
+                                 "labelSelector": {
+                                    "matchLabels": {
+                                       "name": "foo-deploy"
+                                    }
+                                 },
+                                 "topologyKey": "kubernetes.io/hostname"
+                              },
+                              "weight": 70
+                           },
+                           {
+                              "podAffinityTerm": {
+                                 "labelSelector": {
+                                    "matchLabels": {
+                                       "name": "foo-deploy"
+                                    }
+                                 },
+                                 "topologyKey": "failure-domain.beta.kubernetes.io/zone"
+                              },
+                              "weight": 70
+                           },
+                           {
+                              "podAffinityTerm": {
+                                 "labelSelector": {
+                                    "matchLabels": {
+                                       "name": "foo-deploy"
+                                    }
+                                 },
+                                 "topologyKey": "failure-domain.beta.kubernetes.io/region"
+                              },
+                              "weight": 70
+                           }
+                        ]
+                     }
+                  },
                   "containers": [
                      {
                         "args": [ ],
@@ -113,6 +153,10 @@
                                     "name": "foo-secret"
                                  }
                               }
+                           },
+                           {
+                              "name": "other_key",
+                              "value": null
                            }
                         ],
                         "image": "nginx:1.12",
@@ -156,7 +200,48 @@
          }
       },
       {
-         "apiVersion": "apps/v1beta2",
+         "apiVersion": "policy/v1beta1",
+         "kind": "PodDisruptionBudget",
+         "metadata": {
+            "annotations": { },
+            "labels": {
+               "name": "foo-deploy-pdb"
+            },
+            "name": "foo-deploy-pdb"
+         },
+         "spec": {
+            "minAvailable": 1,
+            "selector": {
+               "matchLabels": {
+                  "name": "foo-deploy"
+               }
+            }
+         }
+      },
+      {
+         "apiVersion": "autoscaling.k8s.io/v1beta2",
+         "kind": "VerticalPodAutoscaler",
+         "metadata": {
+            "annotations": { },
+            "labels": {
+               "name": "foo-deploy"
+            },
+            "name": "foo-deploy",
+            "namespace": "foons"
+         },
+         "spec": {
+            "targetRef": {
+               "apiVersion": "apps/v1",
+               "kind": "Deployment",
+               "name": "foo-deploy"
+            },
+            "updatePolicy": {
+               "updateMode": "Auto"
+            }
+         }
+      },
+      {
+         "apiVersion": "apps/v1",
          "kind": "DaemonSet",
          "metadata": {
             "annotations": { },
@@ -192,6 +277,10 @@
                                     "name": "foo-secret"
                                  }
                               }
+                           },
+                           {
+                              "name": "other_key",
+                              "value": null
                            }
                         ],
                         "image": "nginx:1.12",
@@ -240,10 +329,11 @@
          }
       },
       {
-         "apiVersion": "extensions/v1beta1",
+         "apiVersion": "networking.k8s.io/v1beta1",
          "kind": "Ingress",
          "metadata": {
             "annotations": {
+               "cert-manager.io/cluster-issuer": "letsencrypt-prod-dns",
                "certmanager.k8s.io/acme-challenge-type": "dns01",
                "certmanager.k8s.io/acme-dns01-provider": "default",
                "certmanager.k8s.io/cluster-issuer": "letsencrypt-prod-dns"
@@ -459,6 +549,10 @@
                               "name": "foo-secret"
                            }
                         }
+                     },
+                     {
+                        "name": "other_key",
+                        "value": null
                      }
                   ],
                   "image": "nginx:1.12",
@@ -603,6 +697,7 @@
          "spec": {
             "ports": [
                {
+                  "name": "http",
                   "port": 80,
                   "targetPort": 80
                }
@@ -614,7 +709,7 @@
          }
       },
       {
-         "apiVersion": "apps/v1beta2",
+         "apiVersion": "apps/v1",
          "kind": "StatefulSet",
          "metadata": {
             "annotations": { },
@@ -652,6 +747,10 @@
                                     "name": "foo-secret"
                                  }
                               }
+                           },
+                           {
+                              "name": "other_key",
+                              "value": null
                            }
                         ],
                         "image": "nginx:1.12",
@@ -723,6 +822,27 @@
                   }
                }
             ]
+         }
+      },
+      {
+         "apiVersion": "autoscaling.k8s.io/v1beta2",
+         "kind": "VerticalPodAutoscaler",
+         "metadata": {
+            "annotations": { },
+            "labels": {
+               "name": "foo-vpa"
+            },
+            "name": "foo-vpa"
+         },
+         "spec": {
+            "targetRef": {
+               "apiVersion": "apps/v1",
+               "kind": "Deployment",
+               "name": "foo-deploy"
+            },
+            "updatePolicy": {
+               "updateMode": "Auto"
+            }
          }
       }
    ],
