@@ -40,3 +40,11 @@ kubectl apply -f mydb.deploy.yaml
 ./create-sealedsecret.sh
 kubectl apply -f mydb.sealedsecret.yaml
 ~~~~
+
+## Appendix
+
+* Cluster created using [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) with:
+
+~~~~bash
+kind create cluster --config kind-cluster.yaml
+~~~~
