@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mydb
+  labels:
+    name: mydb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: mydb
+  template:
+    metadata:
+      labels:
+        name: mydb
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: default
+          image: bitnami/mariadb:10.4.12
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: db
+              containerPort: 3306
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mydb-secret
+                  key: db-password
