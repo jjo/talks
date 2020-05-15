@@ -3,21 +3,24 @@ kind: PodSecurityPolicy
 metadata:
   annotations: {}
   labels:
-    name: 32-openshift-restricted
-  name: 32-openshift-restricted
+    name: 00-zero
+  name: 00-zero
 spec:
   allowPrivilegeEscalation: false
   allowedCapabilities: []
   forbiddenSysctls:
   - '*'
   fsGroup:
-    rule: RunAsAny
+    ranges:
+    - max: 65535
+      min: 1
+    rule: MustRunAs
   hostIPC: false
   hostNetwork: false
   hostPID: false
   hostPorts: []
   privileged: false
-  readOnlyRootFilesystem: false
+  readOnlyRootFilesystem: true
   requiredDropCapabilities:
   - ALL
   runAsUser:
@@ -25,12 +28,15 @@ spec:
   seLinux:
     rule: RunAsAny
   supplementalGroups:
-    rule: RunAsAny
+    ranges:
+    - max: 65535
+      min: 1
+    rule: MustRunAs
   volumes:
   - configMap
-  - downwardAPI
-  - emptyDir
-  - persistentVolumeClaim
-  - projected
   - secret
+  - emptyDir
+  - projected
+  - downwardAPI
+  - persistentVolumeClaim
 

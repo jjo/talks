@@ -34,9 +34,9 @@ spec:
     rule: MustRunAs
   volumes:
   - configMap
-  - secret
-  - emptyDir
-  - projected
   - downwardAPI
+  - emptyDir
   - persistentVolumeClaim
+  - projected
+  - secret
 

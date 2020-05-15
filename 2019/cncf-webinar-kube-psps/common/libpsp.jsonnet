@@ -7,6 +7,18 @@ local kube = (import "../lib/kube.libsonnet");
     metadata+: {
       assert !std.objectHas(self, "namespace") : "PSPs are not namespaced",
     },
+    spec+: {
+      // list of volume types considered safe to use
+      safeVolumes_:: {
+        configMap: true,
+        emptyDir: true,
+        persistentVolumeClaim: true,
+        projected: true,
+        secret: true,
+        downwardAPI: true,
+      },
+      safeVolumes:: [key for key in std.objectFields(self.safeVolumes_) if self.safeVolumes_[key]],
+    },
   },
 
   // Naming order matters: after collecting all PSPs for a Pod they'll get
@@ -20,8 +32,6 @@ local kube = (import "../lib/kube.libsonnet");
   // root/non-root helpers
   runAsAny:: { rule: "RunAsAny" },
   runAsNonRoot:: { rule: "MustRunAs", ranges: [{ min: 1, max: 65535 }] },
-  // list of volume types considered safe to use
-  safeVolumes:: ["configMap", "secret", "emptyDir", "projected", "downwardAPI", "persistentVolumeClaim"],
 
   // helper contructs and functions
   usePSP:: { apiGroups: ["policy"], resources: ["podsecuritypolicies"], verbs: ["use"] },
@@ -49,7 +59,7 @@ local kube = (import "../lib/kube.libsonnet");
   // returns a RoleBinding object pointing to the passed ClusterRole,
   // with all fields and naming already set.
   RoleBindNamespacesToPSPRoles(namespaces, psp_cr):: {
-    ["psp_rb_ns_%s_default" % ns]: $.RoleBindingPSP(
+    ["psp_rb_ns_%s_privileged" % ns]: $.RoleBindingPSP(
       ns,
       psp_cr,
       [kube.Group("system:serviceaccounts:%s" % ns)]

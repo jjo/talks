@@ -3,13 +3,13 @@ kind: ClusterRole
 metadata:
   annotations: {}
   labels:
-    name: psp-openshift-restricted
-  name: psp:openshift-restricted
+    name: psp-zero
+  name: psp:zero
 rules:
 - apiGroups:
   - policy
   resourceNames:
-  - 32-openshift-restricted
+  - 00-zero
   resources:
   - podsecuritypolicies
   verbs:

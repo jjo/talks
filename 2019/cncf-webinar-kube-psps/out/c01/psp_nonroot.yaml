@@ -7,8 +7,7 @@ metadata:
   name: 40-nonroot
 spec:
   allowPrivilegeEscalation: false
-  allowedCapabilities:
-  - '*'
+  allowedCapabilities: []
   forbiddenSysctls:
   - '*'
   fsGroup:
@@ -21,6 +20,8 @@ spec:
   hostPID: false
   hostPorts: []
   privileged: false
+  requiredDropCapabilities:
+  - NET_RAW
   runAsUser:
     rule: MustRunAsNonRoot
   seLinux:
@@ -32,9 +33,9 @@ spec:
     rule: MustRunAs
   volumes:
   - configMap
-  - secret
-  - emptyDir
-  - projected
   - downwardAPI
+  - emptyDir
   - persistentVolumeClaim
+  - projected
+  - secret
 

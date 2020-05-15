@@ -3,11 +3,12 @@ kind: PodSecurityPolicy
 metadata:
   annotations: {}
   labels:
-    name: 32-openshift-restricted
-  name: 32-openshift-restricted
+    name: 70-mayroot-w-privesc
+  name: 70-mayroot-w-privesc
 spec:
-  allowPrivilegeEscalation: false
-  allowedCapabilities: []
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+  - '*'
   forbiddenSysctls:
   - '*'
   fsGroup:
@@ -17,11 +18,9 @@ spec:
   hostPID: false
   hostPorts: []
   privileged: false
-  readOnlyRootFilesystem: false
-  requiredDropCapabilities:
-  - ALL
+  requiredDropCapabilities: []
   runAsUser:
-    rule: MustRunAsNonRoot
+    rule: RunAsAny
   seLinux:
     rule: RunAsAny
   supplementalGroups:
