@@ -27,4 +27,4 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: mydb-secret
-                  key: db-password
+                  key: db_password
