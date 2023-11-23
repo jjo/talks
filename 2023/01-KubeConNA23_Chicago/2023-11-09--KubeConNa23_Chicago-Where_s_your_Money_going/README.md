@@ -36,6 +36,8 @@ round(
 )
 ```
 
+![image](https://user-images.githubusercontent.com/88727/285245989-3d543008-2ef7-4580-acaa-b2389e7bc1d6.png)
+
 * Mock compute spending (`cpu`, `memory`) using a sine wave and adding
   respective values and labels via `absent()`
 
@@ -55,4 +57,4 @@ round(
 )
 ```
 
-![image](https://user-images.githubusercontent.com/88727/285245989-3d543008-2ef7-4580-acaa-b2389e7bc1d6.png)
+![image](https://user-images.githubusercontent.com/88727/285287928-16a7ff41-2400-4fb3-aae0-683efae9982d.png)
