@@ -17,6 +17,9 @@ https://www.accelevents.com/e/kubecon-cloudnativecon-north-america-2023/portal/s
 [PromQL fun](https://gist.github.com/jjo/080ae9f49175279f52d744325b0eb482)
 used to create some of the visualizations shown in the slides:
 
+* Mock compute spending (`cpu`, `memory`) using a sine wave and adding
+  respective values and labels via `label_replace()` and `vector()`
+
 ```sql
 round(
     8  # <- number of nodes
@@ -30,6 +33,25 @@ round(
 )
 * on() group_left(unit) (
     label_replace(vector(1) , "unit", "usd_per_hour", "", "")
+)
+```
+
+* Mock compute spending (`cpu`, `memory`) using a sine wave and adding
+  respective values and labels via `absent()`
+
+```sql
+round(
+    8  # <- number of nodes
+    *
+    (1-sin(vector((time()-(${__to:date:seconds}))/(3600*10) * pi()))) / 2
+)
+* on() group_right() (
+    absent(_x_{spend="cpu"}) * 0.0445000 * 8  # <- vCPU per node
+    or
+    absent(_x_{spend="memory"}) * 0.0049225 * 16  # <- GB per node
+)
+* on() group_left(unit) (
+    absent(_x_{unit="usd_per_hour"})
 )
 ```
 
