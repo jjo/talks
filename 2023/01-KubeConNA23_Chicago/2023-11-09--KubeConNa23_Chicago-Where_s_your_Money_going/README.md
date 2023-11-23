@@ -13,7 +13,7 @@ https://www.accelevents.com/e/kubecon-cloudnativecon-north-america-2023/portal/s
 [PromQL fun](https://gist.github.com/jjo/080ae9f49175279f52d744325b0eb482)
 used to create some of the visualizations shown in the slides:
 
-```promql
+```sql
 round(
     8  # <- number of nodes
     *
