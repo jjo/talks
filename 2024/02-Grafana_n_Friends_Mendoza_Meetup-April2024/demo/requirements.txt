@@ -1,0 +1,4 @@
+Flask>=2.2.2
+prometheus-flask-exporter==0.23.0
+gunicorn==21.2.0
+mariadb==1.1.10

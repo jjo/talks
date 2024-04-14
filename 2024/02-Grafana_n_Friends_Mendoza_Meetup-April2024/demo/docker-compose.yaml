@@ -1,0 +1,72 @@
+---
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - MARIADB_HOST=db
+      - MARIADB_USER=my_user
+      - MARIADB_PASSWORD=not_secret
+      - MARIADB_DATABASE=my_db
+      - PROMETHEUS_MULTIPROC_DIR=/tmp
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    restart: always
+  prometheus:
+    image: prom/prometheus:v2.37.0
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-remote-write-receiver"
+    volumes:
+      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - web
+  grafana:
+    #image: grafana/grafana:10.0.12
+    #image: us.gcr.io/hosted-grafana/hosted-grafana-pro:11.1.0-69181
+    image: grafana/grafana:11.0.0-preview-ubuntu
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./etc/grafana:/etc/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+  db:
+    image: mariadb:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=ultra_secret
+      - MYSQL_USER=my_user
+      - MYSQL_PASSWORD=not_secret
+      - MYSQL_DATABASE=my_db
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./etc/mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql
+  loadtester:
+    image: loadimpact/k6:latest
+    environment:
+      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
+      - K6_PROMETHEUS_RW_TREND_STATS=p(50),p(95),p(99),min,max
+    volumes:
+      - ./k6/load_test.js:/scripts/load_test.js
+    depends_on:
+      - web
+    command: run -o experimental-prometheus-rw /scripts/load_test.js
+    restart: always
+
+volumes:
+  grafana-storage:
+  db-data:
+  prometheus-data:
