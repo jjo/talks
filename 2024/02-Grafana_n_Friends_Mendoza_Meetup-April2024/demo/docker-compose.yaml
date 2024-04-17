@@ -51,6 +51,8 @@ services:
       - MYSQL_USER=my_user
       - MYSQL_PASSWORD=not_secret
       - MYSQL_DATABASE=my_db
+    ports:
+      - "3306:3306"
     volumes:
       - db-data:/var/lib/mysql
       - ./etc/mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql

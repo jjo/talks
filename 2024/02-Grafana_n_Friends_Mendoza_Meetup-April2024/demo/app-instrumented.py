@@ -1,11 +1,12 @@
 import sys
 
 from flask import Flask, jsonify, request, Response
-from prometheus_client import Counter, start_http_server
 
+from prometheus_flask_exporter import PrometheusMetrics
+
+from prometheus_client import Counter, start_http_server
 from prometheus_client import multiprocess
 from prometheus_client import generate_latest, CollectorRegistry, CONTENT_TYPE_LATEST
-from prometheus_flask_exporter import PrometheusMetrics
 
 import mariadb
 
@@ -13,6 +14,13 @@ app = Flask(__name__)
 metrics = PrometheusMetrics(app)
 
 # Prometheus metrics
+demo_app_http_requests_counter = metrics.counter(
+    'demo_app_http_requests', 'Request count by request paths',
+    labels={
+        'path': lambda: request.path,
+        'method': lambda: request.method,
+    }
+)
 db_query_counter = metrics.counter(
     'db_queries_total', 'Total number of database queries',
 )
@@ -40,6 +48,7 @@ except mariadb.Error as e:
 
 
 @app.route('/items', methods=['GET'])
+@demo_app_http_requests_counter
 @db_query_counter
 @db_query_latency
 def get_items():
@@ -50,6 +59,7 @@ def get_items():
 
 
 @app.route('/items', methods=['POST'])
+@demo_app_http_requests_counter
 @db_query_counter
 @db_query_latency
 def create_item():
@@ -63,6 +73,7 @@ def create_item():
 
 
 @app.route('/items/<int:item_id>', methods=['PUT'])
+@demo_app_http_requests_counter
 @db_query_counter
 @db_query_latency
 def update_item(item_id):
@@ -76,6 +87,7 @@ def update_item(item_id):
 
 
 @app.route('/items/<int:item_id>', methods=['DELETE'])
+@demo_app_http_requests_counter
 @db_query_counter
 @db_query_latency
 def delete_item(item_id):
@@ -88,6 +100,7 @@ def delete_item(item_id):
 
 
 @app.route('/items/search', methods=['GET'])
+@demo_app_http_requests_counter
 @db_query_counter
 @db_query_latency
 def search_items():
