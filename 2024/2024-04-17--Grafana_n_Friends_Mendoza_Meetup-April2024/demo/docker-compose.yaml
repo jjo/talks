@@ -30,8 +30,6 @@ services:
     depends_on:
       - web
   grafana:
-    #image: grafana/grafana:10.0.12
-    #image: us.gcr.io/hosted-grafana/hosted-grafana-pro:11.1.0-69181
     image: grafana/grafana:11.0.0-preview-ubuntu
     volumes:
       - grafana-storage:/var/lib/grafana
