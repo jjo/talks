@@ -1,0 +1,4 @@
+Flask>=2.2.2
+gunicorn==21.2.0
+mariadb==1.1.10
+opentelemetry-distro[otlp]==0.45b0

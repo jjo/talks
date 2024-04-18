@@ -1,0 +1,72 @@
+---
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - MARIADB_HOST=db
+      - MARIADB_USER=my_user
+      - MARIADB_PASSWORD=not_secret
+      - MARIADB_DATABASE=my_db
+      - PROMETHEUS_MULTIPROC_DIR=/tmp
+      - OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRIC_EXPORT_INTERVAL=500
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-lgtm:4317
+      - OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION=base2_exponential_bucket_histogram
+      - OTEL_SEMCONV_STABILITY_OPT_IN=http
+    depends_on:
+      - db
+      - otel-lgtm
+    volumes:
+      - .:/app
+    restart: always
+  otel-lgtm:
+    image: grafana/otel-lgtm
+    volumes:
+#      - ./etc/grafana:/etc/grafana
+      - prometheus-otel-demo-data:/otel-lgtm/data
+      - grafana-otel-demo-storage:/otel-lgtm/grafana-10.2.0/data
+      - ./etc/prometheus/prometheus.yml:/otel-lgtm/prometheus.yaml
+    ports:
+      - "3000:3000"
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+  db:
+    image: mariadb:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=ultra_secret
+      - MYSQL_USER=my_user
+      - MYSQL_PASSWORD=not_secret
+      - MYSQL_DATABASE=my_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./etc/mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql
+  loadtester:
+    image: loadimpact/k6:latest
+    environment:
+      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
+      - K6_PROMETHEUS_RW_TREND_STATS=p(50),p(95),p(99),min,max
+    volumes:
+      - ./k6/load_test.js:/scripts/load_test.js
+    depends_on:
+      - web
+    command: run -o experimental-prometheus-rw /scripts/load_test.js
+    restart: always
+
+volumes:
+  db-data:
+  grafana-otel-demo-storage:
+  prometheus-otel-demo-data:
