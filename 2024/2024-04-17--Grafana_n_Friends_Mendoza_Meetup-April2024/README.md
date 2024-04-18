@@ -16,3 +16,7 @@ Also at the slides above, asked <https://claude.ai/>:
 1. modify dockerfile to run it in production using wsgi
 1. add an endpoint to query column1
 1. write another docker-compose.yaml stanza to run a prometheus instance with --web.enable-remote-write-receive
+
+## `demo-otel` content
+
+Demo files at [./demo-otel](./demo-otel), mostly following <https://grafana.com/blog/2024/03/13/an-opentelemetry-backend-in-a-docker-image-introducing-grafana/otel-lgtm/>, re-using own simple flask `app.py`.
