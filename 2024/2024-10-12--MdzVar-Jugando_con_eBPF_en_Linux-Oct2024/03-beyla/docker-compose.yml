@@ -1,0 +1,53 @@
+---
+version: "3.8"
+
+services:
+  simplesrv:
+    build:
+      context: simplesrv/
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+  beyla:
+    image: grafana/beyla:latest
+    pid: "service:simplesrv"
+    privileged: true
+    ports:
+      - 9400:9400
+    environment:
+      BEYLA_PROMETHEUS_PORT: 9400
+      BEYLA_OPEN_PORT: 8080
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - beyla
+
+  grafana:
+    image: grafana/grafana:11.2.2-ubuntu
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./etc/grafana:/etc/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+
+  loadtester:
+    image: loadimpact/k6:latest
+    volumes:
+      - ./k6/load_test.js:/k6/load_test.js
+    depends_on:
+      - simplesrv
+    command: run /k6/load_test.js
+    restart: always
+volumes:
+  grafana-storage:
