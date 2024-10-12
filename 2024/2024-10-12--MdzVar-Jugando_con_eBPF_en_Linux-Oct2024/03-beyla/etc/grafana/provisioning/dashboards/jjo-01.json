@@ -23,6 +23,7 @@
   "panels": [
     {
       "datasource": {
+        "default": true,
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
@@ -82,18 +83,23 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 12,
+        "w": 24,
         "x": 0,
         "y": 0
       },
       "id": 1,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Max",
+          "sortDesc": true
         },
         "tooltip": {
           "mode": "single",
@@ -107,9 +113,9 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.90, sum by(service_name, le) (rate(http_server_request_duration_seconds_bucket[1m])))",
+          "expr": "histogram_quantile(0.90, sum by(service_name, http_route, le) (rate(http_server_request_duration_seconds_bucket[1m])))",
           "instant": false,
-          "legendFormat": "{{service_name}} {{http_response_status_code}} p90",
+          "legendFormat": "p90 {{service_name}} {{http_route}}",
           "range": true,
           "refId": "A"
         },
@@ -121,7 +127,7 @@
           "editorMode": "code",
           "expr": "histogram_quantile(0.5, sum by(service_name, http_route, le) (rate(http_server_request_duration_seconds_bucket[1m])))",
           "instant": false,
-          "legendFormat": "{{service_name}} {{http_response_status_code}} p50",
+          "legendFormat": "p50 {{service_name}} {{http_route}}",
           "range": true,
           "refId": "B"
         }
@@ -143,6 +149,6 @@
   "timezone": "browser",
   "title": "jjo-01",
   "uid": "ae0m0hpifvawwe",
-  "version": 1,
+  "version": 4,
   "weekStart": ""
 }

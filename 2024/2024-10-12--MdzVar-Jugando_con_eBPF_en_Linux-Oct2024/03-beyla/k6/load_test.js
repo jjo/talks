@@ -26,10 +26,12 @@ function getRandomPath() {
 }
 
 function getRandomDelay(path) {
+  /*
   if (path === '/api/orders') {
     // Make /api/orders noticeably slower
     return randomIntBetween(1000, 5000); // 1-3 seconds delay
   }
+  */
   return randomIntBetween(0, 500); // 0-500 ms delay for other paths
 }
 
