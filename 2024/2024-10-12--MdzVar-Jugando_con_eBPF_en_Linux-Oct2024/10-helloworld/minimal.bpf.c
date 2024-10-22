@@ -15,8 +15,7 @@ SEC("tp/syscalls/sys_enter_openat")
 int handle_tp(void *ctx)
 {
   pid_t pid = bpf_get_current_pid_tgid() >> 32;
-  if (pid_filter && pid != pid_filter)
-    return 0;
+
   bpf_printk("BPF triggered sys_enter_openat from PID %d.\n", pid);
   return 0;
 }
