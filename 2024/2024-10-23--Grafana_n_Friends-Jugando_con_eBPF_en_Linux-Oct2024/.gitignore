@@ -1,0 +1,3 @@
+*.o
+*skel.json
+package.json

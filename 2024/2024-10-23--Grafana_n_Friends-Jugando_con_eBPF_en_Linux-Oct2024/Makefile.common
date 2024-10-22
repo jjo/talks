@@ -1,0 +1,25 @@
+
+OBJ=$(SRC:.c=.o)
+OUT=$(OBJ) ./*.skel.json ./package.json
+
+all:
+	@echo make build
+	@echo make run
+	@echo make trace
+	@echo make clean
+
+build: $(OBJ)
+
+%.o: %.c
+	ecc $<
+
+clean:
+	rm -f $(OUT)
+
+run: build
+	sudo ecli run package.json
+
+trace:
+	sudo cat /sys/kernel/debug/tracing/trace_pipe
+
+.PHONY: all build clean run trace
