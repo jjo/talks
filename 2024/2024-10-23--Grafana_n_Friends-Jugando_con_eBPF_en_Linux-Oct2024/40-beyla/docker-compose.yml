@@ -23,6 +23,7 @@ services:
     image: prom/prometheus:v3.0.0-beta.1
     volumes:
       - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-storage:/prometheus
     ports:
       - "9090:9090"
     depends_on:
@@ -52,3 +53,4 @@ services:
     restart: always
 volumes:
   grafana-storage:
+  prometheus-storage:
