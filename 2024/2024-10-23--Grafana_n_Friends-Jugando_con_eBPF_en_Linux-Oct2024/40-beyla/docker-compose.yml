@@ -6,10 +6,12 @@ services:
     build:
       context: simplesrv/
       dockerfile: Dockerfile
+    container_name: simplesrv
     ports:
       - 8080:8080
   beyla:
     image: grafana/beyla:latest
+    container_name: beyla
     pid: "service:simplesrv"
     privileged: true
     ports:
@@ -21,6 +23,7 @@ services:
   prometheus:
     #image: prom/prometheus:latest
     image: prom/prometheus:v3.0.0-beta.1
+    container_name: prometheus
     volumes:
       - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-storage:/prometheus
@@ -30,7 +33,8 @@ services:
       - beyla
 
   grafana:
-    image: grafana/grafana:11.2.2-ubuntu
+    image: grafana/grafana:11.3.0-ubuntu
+    container_name: grafana
     volumes:
       - grafana-storage:/var/lib/grafana
       - ./etc/grafana:/etc/grafana
@@ -41,16 +45,45 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
-    restart: unless-stopped
 
-  loadtester:
+  k6:
     image: loadimpact/k6:latest
+    container_name: k6
     volumes:
       - ./k6/load_test.js:/k6/load_test.js
     depends_on:
       - simplesrv
-    command: run /k6/load_test.js
-    restart: always
+    command: run --out json /k6/load_test.js
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:2.9.10
+    container_name: loki
+    ports:
+      - "3100:3100"
+      - "9096:9096"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./etc/loki:/etc/loki
+      - loki-data:/loki
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --tries=1 -O- http://localhost:3100/ready || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - ./etc/promtail/docker-config.yml:/etc/promtail/docker-config.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/docker-config.yml
+
 volumes:
   grafana-storage:
   prometheus-storage:
+  loki-data:
