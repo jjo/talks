@@ -143,7 +143,7 @@ limits_config:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
 
 ---
 **Note**: Remember to replace `<repository-url>` and `<repository-name>` with your actual repository details.
