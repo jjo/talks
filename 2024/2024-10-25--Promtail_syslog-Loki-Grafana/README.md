@@ -62,7 +62,7 @@ Promtail is configured to:
 - Listen for syslog messages on UDP port 1514
 - Parse messages in RFC5424 format
 - Add useful labels including:
-  - `service_name`: Format "syslog/<facility>"
+  - `service_name`: Format `"syslog/<facility>"`
   - `severity`
   - `facility`
   - `hostname`
