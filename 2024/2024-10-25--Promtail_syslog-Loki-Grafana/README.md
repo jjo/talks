@@ -146,4 +146,4 @@ limits_config:
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
-**Note**: Remember to replace `<repository-url>` and `<repository-name>` with your actual repository details. Also, add your own screenshot to the `images/` directory as `screenshot.jpeg`.
+**Note**: Remember to replace `<repository-url>` and `<repository-name>` with your actual repository details.
