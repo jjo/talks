@@ -1,6 +1,4 @@
 ---
-version: "3.8"
-
 services:
   prometheus:
     image: prom/prometheus:v3.0.0-beta.1
