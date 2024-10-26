@@ -1,0 +1,55 @@
+server:
+  http_listen_address: 0.0.0.0
+  http_listen_port: 9080
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: syslog
+    syslog:
+      listen_address: 0.0.0.0:1514
+      listen_protocol: udp
+      labels:
+        job: "syslog"
+    relabel_configs:
+      - source_labels: ['__syslog_connection_ip_address']
+        target_label: 'host'
+      - source_labels: ['__syslog_message_severity']
+        target_label: 'severity'
+      - source_labels: ['__syslog_message_facility']
+        target_label: 'facility'
+      - source_labels: ['__syslog_message_hostname']
+        target_label: 'hostname'
+      # Create service_name label by combining "syslog/" with facility
+      - source_labels: ['__syslog_message_facility']
+        target_label: 'service_name'
+        regex: '(.*)'
+        replacement: 'syslog/${1}'
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'service_name'
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: 'logstream'
+      - source_labels: ['__meta_docker_container_label_logging_jobname']
+        target_label: 'job'
+  - job_name: containers
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: containerlogs
+          __path__: /var/lib/docker/containers/*/*log
+    pipeline_stages:
+      - docker: {}

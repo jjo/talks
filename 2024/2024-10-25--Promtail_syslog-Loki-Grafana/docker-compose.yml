@@ -1,0 +1,60 @@
+---
+version: "3.8"
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.0.0-beta.1
+    container_name: prometheus
+    volumes:
+      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-storage:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:11.3.0-ubuntu
+    container_name: grafana
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./etc/grafana:/etc/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+
+  loki:
+    image: grafana/loki:2.9.10
+    container_name: loki
+    ports:
+      - "3100:3100"
+      - "9096:9096"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./etc/loki:/etc/loki
+      - loki-data:/loki
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --tries=1 -O- http://localhost:3100/ready || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    ports:
+      - "1514:1514/udp"
+    volumes:
+      - ./etc/promtail/docker-config.yml:/etc/promtail/docker-config.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/docker-config.yml
+
+volumes:
+  grafana-storage:
+  prometheus-storage:
+  loki-data:

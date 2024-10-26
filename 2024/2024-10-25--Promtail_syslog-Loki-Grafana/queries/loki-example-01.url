@@ -1,0 +1,1 @@
+http://localhost:3000/a/grafana-lokiexplore-app/explore/service/syslog-daemon/logs?patterns=%5B%5D&from=now-15m&to=now&var-ds=Loki&var-filters=service_name%7C%3D%7Csyslog%2Fdaemon&var-fields=&var-levels=&var-metadata=&var-patterns=&var-lineFilter=&urlColumns=%5B%5D&visualizationType=%22logs%22&displayedFields=%5B%5D&var-labelBy=$__all&var-fieldBy=$__all&refresh=
