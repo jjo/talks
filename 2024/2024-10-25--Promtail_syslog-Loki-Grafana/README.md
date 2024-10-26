@@ -49,6 +49,11 @@ This project sets up a complete monitoring stack for collecting and visualizing 
 4. Access Grafana at http://localhost:3000
    - Default credentials: admin/admin
 
+5. Access Grafana Explore->Logs view to query logs using
+   ```bash
+   make example-logql-01
+   ```
+
 ## Configuration Details
 
 ### Promtail Configuration
