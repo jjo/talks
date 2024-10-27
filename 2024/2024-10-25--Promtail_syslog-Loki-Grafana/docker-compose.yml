@@ -144,15 +144,6 @@ configs:
         - source_labels:
           - "__meta_docker_container_label_logging_jobname"
           target_label: "job"
-      - job_name: "containers"
-        pipeline_stages:
-        - docker: {}
-        static_configs:
-        - labels:
-            __path__: "/var/lib/docker/containers/*/*log"
-            job: "containerlogs"
-          targets:
-          - "localhost"
       server:
         http_listen_address: "0.0.0.0"
         http_listen_port: 9080

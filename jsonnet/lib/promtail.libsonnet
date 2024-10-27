@@ -86,7 +86,6 @@
   withDockerLogs(port=9081):: {
     service+: {
       volumes+: [
-        '/var/lib/docker/containers:/var/lib/docker/containers:ro',
         '/var/run/docker.sock:/var/run/docker.sock',
       ],
     },
@@ -119,21 +118,6 @@
               source_labels: ['__meta_docker_container_label_logging_jobname'],
               target_label: 'job',
             },
-          ],
-        },
-        {
-          job_name: 'containers',
-          static_configs: [
-            {
-              targets: ['localhost'],
-              labels: {
-                job: 'containerlogs',
-                __path__: '/var/lib/docker/containers/*/*log',
-              },
-            },
-          ],
-          pipeline_stages: [
-            { docker: {} },
           ],
         },
       ],

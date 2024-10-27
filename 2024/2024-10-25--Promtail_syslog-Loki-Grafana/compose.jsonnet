@@ -6,11 +6,6 @@ local loki = import 'lib/loki.libsonnet';
 local prometheus = import 'lib/prometheus.libsonnet';
 local promtail = import 'lib/promtail.libsonnet';
 
-local c = {
-  prometheus: prometheus.new(),
-  loki: loki.new(),
-};
-
 compose.new({
   local this = self,
   prometheus:
