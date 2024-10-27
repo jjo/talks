@@ -210,7 +210,6 @@ services:
       - 9080:9080
       - 1514:1514/udp
     volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
 volumes:
   grafana-storage: {}
