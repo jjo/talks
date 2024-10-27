@@ -9,7 +9,7 @@ all:
 compose:
 	jsonnet compose.jsonnet | yq -P . > docker-compose.yml
 
-up: compose
+up:
 	docker-compose up -d
 
 logs:
