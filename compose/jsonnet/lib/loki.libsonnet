@@ -110,16 +110,6 @@
         content: std.manifestYamlDoc(root.config, quote_keys=false),
       },
     },
-    asDatasource(isDefault=false):: {
-      name: root.name,
-      type: 'loki',
-      access: 'proxy',
-      url: 'http://%s:%d' % [root.name, root.port],
-      orgId: 1,
-      basicAuth: false,
-      version: 1,
-      isDefault: isDefault,
-    },
   },
   withVolume():: {
     local volume_name = self.name + '-storage',

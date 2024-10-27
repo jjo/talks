@@ -7,7 +7,7 @@ all:
 	@echo "make generate-syslog # Generate syslog messages"
 
 compose:
-	jsonnet -J ../../jsonnet compose.jsonnet | yq -P . > docker-compose.yml
+	jsonnet compose.jsonnet | yq -P . > docker-compose.yml
 
 up: compose
 	docker-compose up -d

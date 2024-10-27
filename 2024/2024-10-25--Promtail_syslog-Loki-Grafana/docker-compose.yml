@@ -9,6 +9,7 @@ configs:
       apiVersion: 1
       datasources:
       - access: "proxy"
+        basicAuth: false
         isDefault: true
         name: "prometheus"
         type: "prometheus"

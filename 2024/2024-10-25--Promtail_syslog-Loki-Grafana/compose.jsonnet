@@ -20,8 +20,8 @@ compose.new({
     grafana.new()
     + grafana.withVolume()
     + grafana.withDatasources([
-      this.prometheus.asDatasource(true),
-      this.loki.asDatasource(),
+      grafana.datasource.withPrometheus(this.prometheus, true),
+      grafana.datasource.withLoki(this.loki),
     ])
     + compose.withDependsOn([this.prometheus, this.loki]),
   /*

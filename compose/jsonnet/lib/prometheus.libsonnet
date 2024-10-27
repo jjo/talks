@@ -40,13 +40,6 @@
         content: std.manifestYamlDoc(root.config, quote_keys=false),
       },
     },
-    asDatasource(isDefault=false):: {
-      name: root.name,
-      access: 'proxy',
-      type: 'prometheus',
-      url: 'http://%s:%d' % [root.name, root.port],
-      isDefault: isDefault,
-    },
   },
   withVolume():: {
     local volume_name = self.name + '-storage',

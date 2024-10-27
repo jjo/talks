@@ -73,4 +73,24 @@
       },
     },
   },
+  datasource:: {
+    withPrometheus(container, isDefault=false):: {
+      name: container.name,
+      type: 'prometheus',
+      basicAuth: false,
+      access: 'proxy',
+      url: 'http://%s:%d' % [container.name, container.port],
+      isDefault: isDefault,
+    },
+    withLoki(container, isDefault=false):: {
+      name: container.name,
+      type: 'loki',
+      basicAuth: false,
+      access: 'proxy',
+      url: 'http://%s:%d' % [container.name, container.port],
+      orgId: 1,
+      version: 1,
+      isDefault: isDefault,
+    },
+  },
 }
