@@ -4,4 +4,6 @@
   loki: 'grafana/loki:3.2.1',
   beyla: 'grafana/beyla:latest',
   promtail: 'grafana/promtail:latest',
+  minio: 'minio/minio:latest',
+  mimir: 'grafana/mimir:latest',
 }

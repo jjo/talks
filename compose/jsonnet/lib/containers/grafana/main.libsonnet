@@ -19,8 +19,9 @@ local images = import '../images.libsonnet';
         '%d:%d' % [root.port, root.port],
       ],
       environment: [
-        'GF_SECURITY_ADMIN_PASSWORD=%s' % defaults.admin_password,
-        'GF_USERS_ALLOW_SIGN_UP=%s' % defaults.allow_signup,
+        'GF_AUTH_ANONYMOUS_ENABLED=true',
+        'GF_AUTH_ANONYMOUS_ORG_ROLE=Admin',
+        'GF_USERS_DEFAULT_THEME=light',
       ],
       configs: [
         {
@@ -77,6 +78,7 @@ local images = import '../images.libsonnet';
     },
   },
   datasource:: {
+    local this = self,
     withPrometheus(container, isDefault=false):: {
       name: container.name,
       type: 'prometheus',
@@ -94,6 +96,16 @@ local images = import '../images.libsonnet';
       orgId: 1,
       version: 1,
       isDefault: isDefault,
+    },
+    withMimir(container, orgId, isDefault=false):: this.withPrometheus(container, isDefault) {
+      url: 'http://%s:%d/prometheus' % [container.name, container.port],
+      jsonData: {
+        httpHeaderName1: 'X-Scope-OrgID',
+        implementation: 'cortex',
+      },
+      secureJsonData: {
+        httpHeaderValue1: orgId,
+      },
     },
   },
 }
