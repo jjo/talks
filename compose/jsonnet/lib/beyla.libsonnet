@@ -1,15 +1,13 @@
 // lib/beyla.libsonnet
-{
-  local defaults = {
-    image: 'grafana/beyla:latest',
-  },
+local images = import 'images.libsonnet';
 
-  new(name='beyla', port=9400):: defaults {
+{
+  new(name='beyla', port=9400):: {
     local root = self,
     name:: name,
     port:: port,
     service: {
-      image: defaults.image,
+      image: images.beyla,
       container_name: root.name,
       privileged: true,
       ports: [

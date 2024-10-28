@@ -1,18 +1,19 @@
 // lib/grafana.libsonnet
+local images = import 'images.libsonnet';
+
 {
   local defaults = {
-    image: 'grafana/grafana:11.3.0-ubuntu',
     admin_password: 'admin',
     allow_signup: false,
   },
 
-  new(name='grafana', port=3000):: defaults {
+  new(name='grafana', port=3000):: {
     local root = self,
     name:: name,
     port:: port,
     config_name:: root.name + '_config',
     service: {
-      image: defaults.image,
+      image: images.grafana,
       container_name: root.name,
       ports: [
         '%d:%d' % [root.port, root.port],

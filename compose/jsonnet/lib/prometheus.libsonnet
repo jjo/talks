@@ -1,16 +1,14 @@
 // lib/prometheus.libsonnet
-{
-  local defaults = {
-    image: 'prom/prometheus:v3.0.0-beta.1',
-  },
+local images = import 'images.libsonnet';
 
-  new(name='prometheus', port=9090):: defaults {
+{
+  new(name='prometheus', port=9090):: {
     local root = self,
     name:: name,
     port:: port,
     config_name:: root.name + '_config',
     service: {
-      image: defaults.image,
+      image: images.prometheus,
       container_name: root.name,
       ports: [
         '%d:%d' % [root.port, root.port],
@@ -26,14 +24,7 @@
       global: {
         scrape_interval: '15s',
       },
-      scrape_configs: [
-        {
-          job_name: 'prometheus',
-          static_configs: [
-            { targets: ['localhost:%d' % root.port] },
-          ],
-        },
-      ],
+      scrape_configs: [],
     },
     configs+: {
       [root.config_name]: {

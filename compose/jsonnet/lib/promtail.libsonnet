@@ -1,16 +1,14 @@
 // lib/promtail.libsonnet
-{
-  local defaults = {
-    image: 'grafana/promtail:latest',
-  },
+local images = import 'images.libsonnet';
 
-  new(name='promtail', port=9080):: defaults {
+{
+  new(name='promtail', port=9080):: {
     local root = self,
     name:: name,
     port:: port,
     config_name:: root.name + '_config',
     service: {
-      image: defaults.image,
+      image: images.promtail,
       container_name: root.name,
       ports: [
         '%d:%d' % [port, port],

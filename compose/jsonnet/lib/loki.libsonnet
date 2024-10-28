@@ -1,16 +1,14 @@
 // lib/loki.libsonnet
-{
-  local defaults = {
-    image: 'grafana/loki:2.9.10',
-  },
+local images = import 'images.libsonnet';
 
-  new(name='loki', port=3100, grpc_port=9096):: defaults {
+{
+  new(name='loki', port=3100, grpc_port=9096):: {
     local root = self,
     name:: name,
     port:: port,
     config_name:: root.name + '_config',
     service: {
-      image: defaults.image,
+      image: images.loki,
       container_name: root.name,
       ports: [
         '%d:%d' % [root.port, root.port],
