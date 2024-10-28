@@ -1,8 +1,8 @@
 // lib/promtail.libsonnet
-local common = import 'common.libsonnet';
-local dc = import 'docker_compose.libsonnet';
+local dc = import '../../docker_compose.libsonnet';
+local common = import '../common.libsonnet';
 
-local images = import 'images.libsonnet';
+local images = import '../images.libsonnet';
 
 {
   new(name='promtail', port=9080):: {
@@ -24,7 +24,7 @@ local images = import 'images.libsonnet';
       ],
       command: '-config.file=/etc/promtail/promtail.yml',
     },
-    local etc_config = std.parseYaml(importstr 'etc/promtail/promtail.yml'),
+    local etc_config = std.parseYaml(importstr '../etc/promtail/promtail.yml'),
     config:: etc_config {
       server+: {
         http_listen_port: root.port,
@@ -40,7 +40,7 @@ local images = import 'images.libsonnet';
     service+: {
       ports+: ['%d:%d/udp' % [port, port]],
     },
-    local etc_config = std.parseYaml(dc.escape(importstr 'etc/promtail/promtail-scrape_configs-syslog.yml')),
+    local etc_config = std.parseYaml(dc.escape(importstr '../etc/promtail/promtail-scrape_configs-syslog.yml')),
     config+: etc_config {
       scrape_configs: common.mapMixin(super.scrape_configs, 'job_name', 'syslog', {
         syslog+: {
@@ -50,7 +50,7 @@ local images = import 'images.libsonnet';
     },
   },
   withDockerLogs(port=9081):: {
-    local etc_config = std.parseYaml(dc.escape(importstr 'etc/promtail/promtail-scrape_configs-docker.yml')),
+    local etc_config = std.parseYaml(dc.escape(importstr '../etc/promtail/promtail-scrape_configs-docker.yml')),
     service+: {
       volumes+: [
         '/var/run/docker.sock:/var/run/docker.sock',
@@ -61,7 +61,7 @@ local images = import 'images.libsonnet';
     },
   },
   withContainerLogs():: {
-    local etc_config = std.parseYaml(dc.escape(importstr 'etc/promtail/promtail-scrape_configs-containers.yml')),
+    local etc_config = std.parseYaml(dc.escape(importstr '../etc/promtail/promtail-scrape_configs-containers.yml')),
     config+: {
       scrape_configs+: etc_config.scrape_configs,
     },

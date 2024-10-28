@@ -1,5 +1,5 @@
 // lib/prometheus.libsonnet
-local images = import 'images.libsonnet';
+local images = import '../images.libsonnet';
 
 {
   new(name='prometheus', port=9090):: {
@@ -21,7 +21,7 @@ local images = import 'images.libsonnet';
       ],
     },
     // NB: import raw YAML, letting root.config to be overridden.
-    local etc_config = std.parseYaml(importstr 'etc/prometheus/prometheus.yml'),
+    local etc_config = std.parseYaml(importstr '../etc/prometheus/prometheus.yml'),
     config:: etc_config {
       scrape_configs: [],
     },

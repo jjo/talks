@@ -1,5 +1,5 @@
 // lib/grafana.libsonnet
-local images = import 'images.libsonnet';
+local images = import '../images.libsonnet';
 
 {
   local defaults = {
