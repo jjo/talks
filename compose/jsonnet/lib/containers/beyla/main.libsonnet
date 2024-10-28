@@ -1,5 +1,5 @@
 // lib/beyla.libsonnet
-local images = import 'images.libsonnet';
+local images = import '../images.libsonnet';
 
 {
   new(name='beyla', port=9400):: {

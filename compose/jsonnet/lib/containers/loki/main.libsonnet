@@ -1,5 +1,5 @@
 // lib/loki.libsonnet
-local images = import 'images.libsonnet';
+local images = import '../images.libsonnet';
 
 {
   new(name='loki', port=3100, grpc_port=9096):: {
@@ -31,7 +31,7 @@ local images = import 'images.libsonnet';
       restart: 'unless-stopped',
     },
     // NB: import raw YAML, overridding fields like `server.http_listen_port`
-    local etc_config = std.parseYaml(importstr 'etc/loki/local-config.yaml'),
+    local etc_config = std.parseYaml(importstr '../etc/loki/local-config.yaml'),
     config:: etc_config {
       server: { http_listen_port: root.port },
     },

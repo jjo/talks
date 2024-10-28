@@ -1,44 +1,38 @@
 // main.jsonnet
+local c = import 'lib/containers/main.libsonnet';
 local compose = import 'lib/docker_compose.libsonnet';
-
-local beyla = import 'lib/beyla.libsonnet';
-local generic = import 'lib/generic.libsonnet';
-local grafana = import 'lib/grafana.libsonnet';
-local loki = import 'lib/loki.libsonnet';
-local prometheus = import 'lib/prometheus.libsonnet';
-local promtail = import 'lib/promtail.libsonnet';
 
 compose.new({
   local this = self,
   simplesrv:
-    generic.new('simplesrv', 8080)
-    + generic.withBuild('simplesrv/'),
+    c.generic.new('simplesrv', 8080)
+    + c.generic.withBuild('simplesrv/'),
   prometheus:
-    prometheus.new()
-    + prometheus.withVolume()
-    + prometheus.withTargets([this.beyla]),
+    c.prometheus.new()
+    + c.prometheus.withVolume()
+    + c.prometheus.withTargets([this.beyla]),
   loki:
-    loki.new()
-    + loki.withVolume(),
+    c.loki.new()
+    + c.loki.withVolume(),
   grafana:
-    grafana.new()
-    + grafana.withVolume()
-    + grafana.withDatasources([
-      grafana.datasource.withPrometheus(this.prometheus, true),
-      grafana.datasource.withLoki(this.loki),
+    c.grafana.new()
+    + c.grafana.withVolume()
+    + c.grafana.withDatasources([
+      c.grafana.datasource.withPrometheus(this.prometheus, true),
+      c.grafana.datasource.withLoki(this.loki),
     ])
     + compose.withDependsOn([this.prometheus, this.loki]),
   beyla:
-    beyla.new()
-    + beyla.withContainerPid(this.simplesrv),
+    c.beyla.new()
+    + c.beyla.withContainerPid(this.simplesrv),
   promtail:
-    promtail.new()
-    + promtail.withDockerLogs()
-    + promtail.withLokiPush(this.loki)
+    c.promtail.new()
+    + c.promtail.withDockerLogs()
+    + c.promtail.withLokiPush(this.loki)
     + compose.withDependsOn([this.loki]),
-  k6: generic.new('k6')
-      + generic.withImage('loadimpact/k6:latest')
-      + generic.withLocalVolume('./k6/load_test.js', '/k6/load_test.js')
-      + generic.withField('restart', 'unless-stopped')
-      + generic.withCommand('run --out json /k6/load_test.js'),
+  k6: c.generic.new('k6')
+      + c.generic.withImage('loadimpact/k6:latest')
+      + c.generic.withLocalVolume('./k6/load_test.js', '/k6/load_test.js')
+      + c.generic.withField('restart', 'unless-stopped')
+      + c.generic.withCommand('run --out json /k6/load_test.js'),
 })
