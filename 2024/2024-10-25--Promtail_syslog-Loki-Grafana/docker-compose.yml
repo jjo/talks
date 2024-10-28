@@ -116,6 +116,9 @@ configs:
         - source_labels:
           - "__syslog_message_facility"
           target_label: "facility"
+        - source_labels:
+          - "__syslog_message_hostname"
+          target_label: "hostname"
         - regex: "(.*)"
           replacement: "syslog/$${1}"
           source_labels:
@@ -199,10 +202,10 @@ services:
     volumes:
       - prometheus-storage:/prometheus
   promtail:
-    command: -config.file=/etc/promtail/docker-config.yml
+    command: -config.file=/etc/promtail/promtail.yml
     configs:
       - source: promtail_config
-        target: /etc/promtail/docker-config.yml
+        target: /etc/promtail/promtail.yml
     container_name: promtail
     depends_on:
       - loki

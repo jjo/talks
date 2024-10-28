@@ -16,4 +16,5 @@
       depends_on+: [c.name for c in containers],
     },
   },
+  escape(s):: std.strReplace(s, '$', '$$'),
 }

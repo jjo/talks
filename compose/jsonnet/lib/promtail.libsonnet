@@ -1,4 +1,7 @@
 // lib/promtail.libsonnet
+local common = import 'common.libsonnet';
+local dc = import 'docker_compose.libsonnet';
+
 local images = import 'images.libsonnet';
 
 {
@@ -16,20 +19,16 @@ local images = import 'images.libsonnet';
       configs: [
         {
           source: root.config_name,
-          target: '/etc/promtail/docker-config.yml',
+          target: '/etc/promtail/promtail.yml',
         },
       ],
-      command: '-config.file=/etc/promtail/docker-config.yml',
+      command: '-config.file=/etc/promtail/promtail.yml',
     },
-    config:: {
-      server: {
-        http_listen_address: '0.0.0.0',
+    local etc_config = std.parseYaml(importstr 'etc/promtail/promtail.yml'),
+    config:: etc_config {
+      server+: {
         http_listen_port: root.port,
       },
-      positions: {
-        filename: '/tmp/positions.yaml',
-      },
-      scrape_configs: [],
     },
     configs+: {
       [root.config_name]: {
@@ -41,84 +40,30 @@ local images = import 'images.libsonnet';
     service+: {
       ports+: ['%d:%d/udp' % [port, port]],
     },
-    config+: {
-      scrape_configs+: [
-        {
-          job_name: 'syslog',
-          syslog: {
-            listen_address: '0.0.0.0:%d' % [port],
-            listen_protocol: 'udp',
-            labels: {
-              job: 'syslog',
-            },
-          },
-          relabel_configs: [
-            {
-              source_labels: ['__syslog_connection_ip_address'],
-              target_label: 'host',
-            },
-            {
-              source_labels: ['__syslog_message_severity'],
-              target_label: 'severity',
-            },
-            {
-              source_labels: ['__syslog_message_facility'],
-              target_label: 'facility',
-            },
-            {
-              source_labels: ['__syslog_message_hostname'],
-              target_label: 'hostname',
-            }
-            // Create service_name label by combining "syslog/" with facility
-            {
-              source_labels: ['__syslog_message_facility'],
-              target_label: 'service_name',
-              regex: '(.*)',
-              replacement: 'syslog/$${1}',  // $$ is used to escape $ in replacement
-            },
-          ],
+    local etc_config = std.parseYaml(dc.escape(importstr 'etc/promtail/promtail-scrape_configs-syslog.yml')),
+    config+: etc_config {
+      scrape_configs: common.mapMixin(super.scrape_configs, 'job_name', 'syslog', {
+        syslog+: {
+          listen_address: '0.0.0.0:%d' % [port],
         },
-      ],
+      }),
     },
   },
   withDockerLogs(port=9081):: {
+    local etc_config = std.parseYaml(dc.escape(importstr 'etc/promtail/promtail-scrape_configs-docker.yml')),
     service+: {
       volumes+: [
         '/var/run/docker.sock:/var/run/docker.sock',
       ],
     },
     config+: {
-      scrape_configs+: [
-        {
-          job_name: 'docker',
-          docker_sd_configs: [
-            {
-              host: 'unix:///var/run/docker.sock',
-              refresh_interval: '5s',
-            },
-          ],
-          relabel_configs: [
-            {
-              source_labels: ['__meta_docker_container_name'],
-              regex: '/(.*)',
-              target_label: 'container',
-            },
-            {
-              source_labels: ['__meta_docker_container_name'],
-              regex: '/(.*)',
-              target_label: 'service_name',
-            },
-            {
-              source_labels: ['__meta_docker_container_log_stream'],
-              target_label: 'logstream',
-            },
-            {
-              source_labels: ['__meta_docker_container_label_logging_jobname'],
-              target_label: 'job',
-            },
-          ],
-        },
-      ],
+      scrape_configs+: etc_config.scrape_configs,
+    },
+  },
+  withContainerLogs():: {
+    local etc_config = std.parseYaml(dc.escape(importstr 'etc/promtail/promtail-scrape_configs-containers.yml')),
+    config+: {
+      scrape_configs+: etc_config.scrape_configs,
     },
   },
   withLokiPush(container):: {

@@ -1,0 +1,21 @@
+scrape_configs:
+  - job_name: syslog
+    syslog:
+      listen_address: 0.0.0.0:1514
+      listen_protocol: udp
+      labels:
+        job: "syslog"
+    relabel_configs:
+      - source_labels: ['__syslog_connection_ip_address']
+        target_label: 'host'
+      - source_labels: ['__syslog_message_severity']
+        target_label: 'severity'
+      - source_labels: ['__syslog_message_facility']
+        target_label: 'facility'
+      - source_labels: ['__syslog_message_hostname']
+        target_label: 'hostname'
+      # Create service_name label by combining "syslog/" with facility
+      - source_labels: ['__syslog_message_facility']
+        target_label: 'service_name'
+        regex: '(.*)'
+        replacement: 'syslog/${1}'
