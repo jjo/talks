@@ -55,4 +55,15 @@ local images = import '../images.libsonnet';
       ],
     },
   },
+  withRemoteWrite(containers, headers={}):: {
+    config+: {
+      remote_write: [
+        {
+          url: 'http://%s:%d/api/v1/push' % [c.name, c.port],
+          [if headers != {} then 'headers']: headers,
+        }
+        for c in containers
+      ],
+    },
+  },
 }

@@ -22,6 +22,17 @@ configs:
         type: "loki"
         url: "http://loki:3100"
         version: 1
+      - access: "proxy"
+        basicAuth: false
+        isDefault: false
+        jsonData:
+          httpHeaderName1: "X-Scope-OrgID"
+          implementation: "cortex"
+        name: "mimir"
+        secureJsonData:
+          httpHeaderValue1: "demo"
+        type: "prometheus"
+        url: "http://mimir:8080/prometheus"
   loki_config:
     content: |-
       auth_enabled: false
@@ -65,10 +76,44 @@ configs:
       table_manager:
         retention_deletes_enabled: true
         retention_period: "672h"
+  mimir_config:
+    content: |-
+      blocks_storage:
+        storage_prefix: "blocks"
+        tsdb:
+          dir: "/data/ingester"
+      common:
+        storage:
+          backend: "s3"
+          s3:
+            access_key_id: "mimir"
+            bucket_name: "mimir"
+            endpoint: "minio:9000"
+            insecure: true
+            secret_access_key: "supersecret"
+      ingester:
+        ring:
+          replication_factor: 1
+      memberlist:
+        join_members:
+        - "mimir"
+      ruler:
+        alertmanager_url: "http://127.0.0.1:8080/alertmanager"
+        ring:
+          heartbeat_period: "2s"
+          heartbeat_timeout: "10s"
+        rule_path: "/data/ruler"
+      server:
+        log_level: "warn"
+      target: "all,overrides-exporter"
   prometheus_config:
     content: |-
       global:
         scrape_interval: "15s"
+      remote_write:
+      - headers:
+          X-Scope-OrgID: "demo"
+        url: "http://mimir:8080/api/v1/push"
       scrape_configs:
       - job_name: "prometheus"
         static_configs:
@@ -180,6 +225,35 @@ services:
     restart: unless-stopped
     volumes:
       - loki-storage:/loki
+  mimir:
+    command: -config.file=/etc/mimir/mimir.yaml
+    configs:
+      - source: mimir_config
+        target: /etc/mimir/mimir.yaml
+    container_name: mimir
+    depends_on:
+      - minio
+    image: grafana/mimir:latest
+    ports:
+      - 8080:8080
+    volumes:
+      - mimir-storage:/data
+  minio:
+    command:
+      - sh
+      - -c
+      - mkdir -p /data/mimir && minio server --quiet /data
+    container_name: minio
+    entrypoint:
+      - ""
+    environment:
+      - MINIO_ROOT_PASSWORD=supersecret
+      - MINIO_ROOT_USER=mimir
+    image: minio/minio:latest
+    ports:
+      - 9000:9000
+    volumes:
+      - minio-storage:/data
   prometheus:
     configs:
       - source: prometheus_config
@@ -207,4 +281,6 @@ services:
 volumes:
   grafana-storage: {}
   loki-storage: {}
+  mimir-storage: {}
+  minio-storage: {}
   prometheus-storage: {}

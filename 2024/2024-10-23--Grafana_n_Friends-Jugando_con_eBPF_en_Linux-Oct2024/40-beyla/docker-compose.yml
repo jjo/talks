@@ -125,8 +125,9 @@ services:
       - prometheus
       - loki
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_USERS_DEFAULT_THEME=light
     image: grafana/grafana:11.3.0-ubuntu
     ports:
       - 3000:3000
