@@ -20,10 +20,9 @@ local images = import 'images.libsonnet';
         },
       ],
     },
-    config:: {
-      global: {
-        scrape_interval: '15s',
-      },
+    // NB: import raw YAML, letting root.config to be overridden.
+    local etc_config = std.parseYaml(importstr 'etc/prometheus/prometheus.yml'),
+    config:: etc_config {
       scrape_configs: [],
     },
     configs+: {

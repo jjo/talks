@@ -185,10 +185,10 @@ services:
     volumes:
       - prometheus-storage:/prometheus
   promtail:
-    command: -config.file=/etc/promtail/docker-config.yml
+    command: -config.file=/etc/promtail/promtail.yml
     configs:
       - source: promtail_config
-        target: /etc/promtail/docker-config.yml
+        target: /etc/promtail/promtail.yml
     container_name: promtail
     depends_on:
       - loki

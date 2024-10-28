@@ -29,6 +29,8 @@ local images = import 'images.libsonnet';
         },
       ],
     },
+    // NB: there's no `std.parseIni` in jsonnet stdlib, ie we can't
+    // import etc/grafana/grafana.ini and override it.
     config:: {
       sections: {
         feature_toggles: {
