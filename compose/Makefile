@@ -1,5 +1,6 @@
 all: rebuild
 
+# Rebuild docker-compose.yml in every directory that contains a `compose.jsonnet` file
 DIRS=$(shell find ../ -name compose.jsonnet -printf "%h\n")
 
 rebuild:
