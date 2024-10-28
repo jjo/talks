@@ -21,4 +21,4 @@ down:
 rm:
 	docker-compose rm -f
 
-.PHONY: all compose up logs down rm generate-syslog example-logql-01
+.PHONY: all compose up logs down rm
