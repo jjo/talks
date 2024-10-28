@@ -21,10 +21,4 @@ down:
 rm:
 	docker-compose rm -f
 
-example-logql-01:
-	open "$(shell cat queries/loki-example-01.url)"
-
-generate-syslog:
-	./scripts/syslog_producer.py --host localhost --port 1514 --interval 0.5 --count 10000
-
-.PHONY: all compose up logs down rm generate-syslog example-logql-01
+.PHONY: all compose up logs down rm

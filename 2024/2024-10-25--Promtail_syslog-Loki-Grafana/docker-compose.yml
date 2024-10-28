@@ -1,58 +1,218 @@
----
+configs:
+  grafana_config:
+    content: |
+      [feature_toggles]
+      enable = true
+      exploreMetrics = true
+  grafana_datasources:
+    content: |-
+      apiVersion: 1
+      datasources:
+      - access: "proxy"
+        basicAuth: false
+        isDefault: true
+        name: "prometheus"
+        type: "prometheus"
+        url: "http://prometheus:9090"
+      - access: "proxy"
+        basicAuth: false
+        isDefault: false
+        name: "loki"
+        orgId: 1
+        type: "loki"
+        url: "http://loki:3100"
+        version: 1
+  loki_config:
+    content: |-
+      auth_enabled: false
+      chunk_store_config:
+        max_look_back_period: "0s"
+      common:
+        path_prefix: "/loki"
+        replication_factor: 1
+        ring:
+          kvstore:
+            store: "inmemory"
+        storage:
+          filesystem:
+            chunks_directory: "/loki/chunks"
+            rules_directory: "/loki/rules"
+      compactor:
+        shared_store: "filesystem"
+        working_directory: "/loki/boltdb-shipper-compactor"
+      limits_config:
+        enforce_metric_name: false
+        ingestion_burst_size_mb: 64
+        ingestion_rate_mb: 32
+        max_cache_freshness_per_query: "10m"
+        max_global_streams_per_user: 5000
+        max_line_size: "2MB"
+        per_stream_rate_limit: "32MB"
+        per_stream_rate_limit_burst: "64MB"
+        reject_old_samples: true
+        reject_old_samples_max_age: "168h"
+        volume_enabled: true
+      ruler:
+        storage:
+          local:
+            directory: "/loki/rules"
+          type: "local"
+      schema_config:
+        configs:
+        - from: "2020-05-15"
+          index:
+            period: "24h"
+            prefix: "index_"
+          object_store: "filesystem"
+          schema: "v11"
+          store: "boltdb-shipper"
+      server:
+        http_listen_port: 3100
+      storage_config:
+        boltdb_shipper:
+          active_index_directory: "/loki/index"
+          cache_location: "/loki/boltdb-cache"
+          cache_ttl: "24h"
+          shared_store: "filesystem"
+      table_manager:
+        retention_deletes_enabled: true
+        retention_period: "672h"
+  prometheus_config:
+    content: |-
+      global:
+        scrape_interval: "15s"
+      scrape_configs:
+      - job_name: "prometheus"
+        static_configs:
+        - targets:
+          - "prometheus:9090"
+      - job_name: "loki"
+        static_configs:
+        - targets:
+          - "loki:3100"
+      - job_name: "promtail"
+        static_configs:
+        - targets:
+          - "promtail:9080"
+      - job_name: "grafana"
+        static_configs:
+        - targets:
+          - "grafana:3000"
+  promtail_config:
+    content: |-
+      clients:
+      - url: "http://loki:3100/loki/api/v1/push"
+      positions:
+        filename: "/tmp/positions.yaml"
+      scrape_configs:
+      - job_name: "syslog"
+        relabel_configs:
+        - source_labels:
+          - "__syslog_connection_ip_address"
+          target_label: "host"
+        - source_labels:
+          - "__syslog_message_severity"
+          target_label: "severity"
+        - source_labels:
+          - "__syslog_message_facility"
+          target_label: "facility"
+        - regex: "(.*)"
+          replacement: "syslog/$${1}"
+          source_labels:
+          - "__syslog_message_facility"
+          target_label: "service_name"
+        syslog:
+          labels:
+            job: "syslog"
+          listen_address: "0.0.0.0:1514"
+          listen_protocol: "udp"
+      - docker_sd_configs:
+        - host: "unix:///var/run/docker.sock"
+          refresh_interval: "5s"
+        job_name: "docker"
+        relabel_configs:
+        - regex: "/(.*)"
+          source_labels:
+          - "__meta_docker_container_name"
+          target_label: "container"
+        - regex: "/(.*)"
+          source_labels:
+          - "__meta_docker_container_name"
+          target_label: "service_name"
+        - source_labels:
+          - "__meta_docker_container_log_stream"
+          target_label: "logstream"
+        - source_labels:
+          - "__meta_docker_container_label_logging_jobname"
+          target_label: "job"
+      server:
+        http_listen_address: "0.0.0.0"
+        http_listen_port: 9080
 services:
-  prometheus:
-    image: prom/prometheus:v3.0.0-beta.1
-    container_name: prometheus
-    volumes:
-      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-storage:/prometheus
-    ports:
-      - "9090:9090"
-
   grafana:
-    image: grafana/grafana:11.3.0-ubuntu
+    configs:
+      - source: grafana_config
+        target: /etc/grafana/grafana.ini
+      - source: grafana_datasources
+        target: /etc/grafana/provisioning/datasources/datasources.yaml
     container_name: grafana
-    volumes:
-      - grafana-storage:/var/lib/grafana
-      - ./etc/grafana:/etc/grafana
-    ports:
-      - "3000:3000"
     depends_on:
       - prometheus
+      - loki
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
-
-  loki:
-    image: grafana/loki:2.9.10
-    container_name: loki
+    image: grafana/grafana:11.3.0-ubuntu
     ports:
-      - "3100:3100"
-      - "9096:9096"
-    command: -config.file=/etc/loki/local-config.yaml
+      - 3000:3000
     volumes:
-      - ./etc/loki:/etc/loki
-      - loki-data:/loki
+      - grafana-storage:/var/lib/grafana
+  loki:
+    command: -config.file=/etc/loki/local-config.yaml
+    configs:
+      - source: loki_config
+        target: /etc/loki/local-config.yaml
+    container_name: loki
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --tries=1 -O- http://localhost:3100/ready || exit 1"]
       interval: 30s
-      timeout: 3s
       retries: 3
       start_period: 30s
-    restart: unless-stopped
-
-  promtail:
-    image: grafana/promtail:latest
-    container_name: promtail
+      test:
+        - CMD-SHELL
+        - wget -q --tries=1 -O- http://localhost:3100/ready || exit 1
+      timeout: 3s
+    image: grafana/loki:2.9.10
     ports:
-      - "1514:1514/udp"
+      - 3100:3100
+      - 9096:9096
+    restart: unless-stopped
     volumes:
-      - ./etc/promtail/docker-config.yml:/etc/promtail/docker-config.yml
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock
+      - loki-storage:/loki
+  prometheus:
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml
+    container_name: prometheus
+    image: prom/prometheus:v3.0.0-beta.1
+    ports:
+      - 9090:9090
+    volumes:
+      - prometheus-storage:/prometheus
+  promtail:
     command: -config.file=/etc/promtail/docker-config.yml
-
+    configs:
+      - source: promtail_config
+        target: /etc/promtail/docker-config.yml
+    container_name: promtail
+    depends_on:
+      - loki
+    image: grafana/promtail:latest
+    ports:
+      - 9080:9080
+      - 1514:1514/udp
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 volumes:
-  grafana-storage:
-  prometheus-storage:
-  loki-data:
+  grafana-storage: {}
+  loki-storage: {}
+  prometheus-storage: {}
