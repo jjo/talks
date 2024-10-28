@@ -25,23 +25,14 @@ configs:
   loki_config:
     content: |-
       auth_enabled: false
-      chunk_store_config:
-        max_look_back_period: "0s"
       common:
         path_prefix: "/loki"
         replication_factor: 1
         ring:
+          instance_addr: "127.0.0.1"
           kvstore:
             store: "inmemory"
-        storage:
-          filesystem:
-            chunks_directory: "/loki/chunks"
-            rules_directory: "/loki/rules"
-      compactor:
-        shared_store: "filesystem"
-        working_directory: "/loki/boltdb-shipper-compactor"
       limits_config:
-        enforce_metric_name: false
         ingestion_burst_size_mb: 64
         ingestion_rate_mb: 32
         max_cache_freshness_per_query: "10m"
@@ -64,16 +55,13 @@ configs:
             period: "24h"
             prefix: "index_"
           object_store: "filesystem"
-          schema: "v11"
-          store: "boltdb-shipper"
+          schema: "v13"
+          store: "tsdb"
       server:
         http_listen_port: 3100
       storage_config:
-        boltdb_shipper:
-          active_index_directory: "/loki/index"
-          cache_location: "/loki/boltdb-cache"
-          cache_ttl: "24h"
-          shared_store: "filesystem"
+        filesystem:
+          directory: "/loki/chunks"
       table_manager:
         retention_deletes_enabled: true
         retention_period: "672h"
@@ -184,7 +172,7 @@ services:
         - CMD-SHELL
         - wget -q --tries=1 -O- http://localhost:3100/ready || exit 1
       timeout: 3s
-    image: grafana/loki:2.9.10
+    image: grafana/loki:3.2.1
     ports:
       - 3100:3100
       - 9096:9096
