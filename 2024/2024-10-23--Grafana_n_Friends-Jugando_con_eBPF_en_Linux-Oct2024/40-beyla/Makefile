@@ -1,3 +1,4 @@
+OUTFILES=docker-compose.yml docker-compose.configs.yml
 all:
 	@echo "make compose	    # Build docker-compose.yml"
 	@echo "make up              # Run docker-compose up -d"
@@ -7,7 +8,8 @@ all:
 	@echo "make generate-syslog # Generate syslog messages"
 
 compose:
-	jsonnet compose.jsonnet | yq -P . > docker-compose.yml
+	jsonnet -m . compose.jsonnet
+	for f in $(OUTFILES); do yq -P . < $$f | sponge $$f; done
 
 up:
 	docker-compose up -d
