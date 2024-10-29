@@ -2,7 +2,7 @@
 local c = import 'lib/containers/main.libsonnet';
 local compose = import 'lib/docker_compose.libsonnet';
 
-compose.new({
+local manifest = compose.new({
   local this = self,
   simplesrv:
     c.generic.new('simplesrv', 8080)
@@ -35,4 +35,6 @@ compose.new({
       + c.generic.withLocalVolume('./k6/load_test.js', '/k6/load_test.js')
       + c.generic.withField('restart', 'unless-stopped')
       + c.generic.withCommand('run --out json /k6/load_test.js'),
-})
+});
+
+compose.splitFiles(manifest)

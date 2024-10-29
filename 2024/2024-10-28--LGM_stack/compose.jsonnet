@@ -9,7 +9,7 @@ local mimirConf = {
   secret_access_key: 'supersecret',
 };
 
-compose.new({
+local manifest = compose.new({
   local this = self,
   prometheus:
     c.prometheus.new()
@@ -43,4 +43,6 @@ compose.new({
     c.minio.new()
     + c.minio.withAuth(mimirConf.access_key_id, mimirConf.secret_access_key)
     + c.minio.withVolume(),
-})
+});
+
+compose.splitFiles(manifest)
