@@ -1,3 +1,4 @@
+// Some inspiration from https://github.com/grafana/intro-to-mltp/blob/main/docker-compose.yml
 {
   new(containers)::
     std.foldl(
