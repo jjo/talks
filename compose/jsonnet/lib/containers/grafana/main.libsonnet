@@ -81,6 +81,7 @@ local images = import '../images.libsonnet';
     local this = self,
     withPrometheus(container, isDefault=false):: {
       name: container.name,
+      uid: container.name,
       type: 'prometheus',
       basicAuth: false,
       access: 'proxy',
@@ -89,6 +90,7 @@ local images = import '../images.libsonnet';
     },
     withLoki(container, isDefault=false):: {
       name: container.name,
+      uid: container.name,
       type: 'loki',
       basicAuth: false,
       access: 'proxy',
@@ -106,6 +108,28 @@ local images = import '../images.libsonnet';
       secureJsonData: {
         httpHeaderValue1: orgId,
       },
+    },
+    withTempo(container, mimirDS, lokiDS, isDefault=false):: {
+      name: container.name,
+      uid: container.name,
+      url: 'http://%s:%d' % [container.name, container.port],
+      type: 'tempo',
+      basicAuth: false,
+      access: 'proxy',
+      jsonData: std.parseYaml(
+        |||
+          nodeGraph:
+            enabled: true
+          serviceMap:
+            datasourceUid: %s
+          tracesToLogs:
+            datasourceUid: %s
+            filterByTraceID: false
+            spanEndTimeShift: "500ms"
+            spanStartTimeShift: "-500ms"
+            tags: ['beast']
+        ||| % [mimirDS, lokiDS],
+      ),
     },
   },
 }

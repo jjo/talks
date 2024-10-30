@@ -94,9 +94,48 @@ services:
       - 1514:1514/udp
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+  tempo:
+    command: -config.file=/etc/tempo/tempo.yaml
+    configs:
+      - source: tempo_config
+        target: /etc/tempo/tempo.yaml
+    container_name: tempo
+    depends_on:
+      - tempo-init
+    healthcheck:
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      test:
+        - CMD-SHELL
+        - wget -q --tries=1 -O- http://localhost:3200/ready || exit 1
+      timeout: 3s
+    image: grafana/tempo:2.6.0
+    ports:
+      - 3200:3200
+      - 4317:4317
+      - 4318:4318
+      - 9411:9411
+      - 14250:14250
+    restart: unless-stopped
+    volumes:
+      - tempo-storage:/tempo_stor
+  tempo-init:
+    command:
+      - sh
+      - -xc
+      - chown -R 10001:10001 /tempo_stor
+    container_name: tempo-init
+    group_add:
+      - 10001
+    image: alpine
+    user: root
+    volumes:
+      - tempo-storage:/tempo_stor
 volumes:
   grafana-storage: {}
   loki-storage: {}
   mimir-storage: {}
   minio-storage: {}
   prometheus-storage: {}
+  tempo-storage: {}
