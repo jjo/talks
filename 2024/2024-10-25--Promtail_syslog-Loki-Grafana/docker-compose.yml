@@ -13,6 +13,7 @@ configs:
         isDefault: true
         name: "prometheus"
         type: "prometheus"
+        uid: "prometheus"
         url: "http://prometheus:9090"
       - access: "proxy"
         basicAuth: false
@@ -20,6 +21,7 @@ configs:
         name: "loki"
         orgId: 1
         type: "loki"
+        uid: "loki"
         url: "http://loki:3100"
         version: 1
   loki_config:
