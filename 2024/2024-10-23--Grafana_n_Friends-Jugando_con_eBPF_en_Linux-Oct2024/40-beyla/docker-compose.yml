@@ -53,10 +53,10 @@ services:
     volumes:
       - ./k6/load_test.js:/k6/load_test.js
   loki:
-    command: -config.file=/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/loki.yaml
     configs:
       - source: loki_config
-        target: /etc/loki/local-config.yaml
+        target: /etc/loki/loki.yaml
     container_name: loki
     healthcheck:
       interval: 30s

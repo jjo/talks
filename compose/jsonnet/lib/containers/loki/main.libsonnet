@@ -15,7 +15,7 @@ local images = import '../images.libsonnet';
         '%d:%d' % [root.port, root.port],
         '%d:%d' % [grpc_port, grpc_port],
       ],
-      command: '-config.file=/etc/loki/local-config.yaml',
+      command: '-config.file=/etc/loki/loki.yaml',
       healthcheck: {
         test: ['CMD-SHELL', 'wget -q --tries=1 -O- http://localhost:%d/ready || exit 1' % root.port],
         interval: '30s',
@@ -26,13 +26,13 @@ local images = import '../images.libsonnet';
       configs: [
         {
           source: root.config_name,
-          target: '/etc/loki/local-config.yaml',
+          target: '/etc/loki/loki.yaml',
         },
       ],
       restart: 'unless-stopped',
     },
     // NB: import raw YAML, overridding fields like `server.http_listen_port`
-    local etc_config = std.parseYaml(importstr '../etc/loki/local-config.yaml'),
+    local etc_config = std.parseYaml(importstr '../etc/loki/loki.yaml'),
     config:: etc_config {
       server: { http_listen_port: root.port },
     },
