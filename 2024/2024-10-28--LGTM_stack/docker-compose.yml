@@ -71,6 +71,9 @@ services:
     volumes:
       - minio-storage:/data
   prometheus:
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-remote-write-receiver
     configs:
       - source: prometheus_config
         target: /etc/prometheus/prometheus.yml

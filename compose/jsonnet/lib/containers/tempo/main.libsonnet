@@ -72,4 +72,24 @@ local images = import '../images.libsonnet';
       [volume_name]: {},
     },
   },
+  withMetricsRemoteWrite(container, apiRoute=null, send_exemplars=true):: {
+    // Heuristic to determine the API route based on the image (mimir vs e.g. prometheus)
+    local getApiRoute(image) =
+      if std.startsWith(image, 'grafana/mimir')
+      then 'api/v1/push'
+      else 'api/v1/write',
+    local apiRouteFinal = if apiRoute == null then getApiRoute(container.service.image) else apiRoute,
+    config+: {
+      metrics_generator+: {
+        storage+: {
+          remote_write: [
+            {
+              url: 'http://%s:%d/%s' % [container.name, container.port, apiRouteFinal],
+              send_exemplars: send_exemplars,
+            },
+          ],
+        },
+      },
+    },
+  },
 }

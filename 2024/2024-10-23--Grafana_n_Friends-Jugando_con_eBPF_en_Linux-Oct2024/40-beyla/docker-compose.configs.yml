@@ -10,13 +10,6 @@ configs:
       datasources:
       - access: "proxy"
         basicAuth: false
-        isDefault: true
-        name: "prometheus"
-        type: "prometheus"
-        uid: "prometheus"
-        url: "http://prometheus:9090"
-      - access: "proxy"
-        basicAuth: false
         isDefault: false
         name: "loki"
         orgId: 1
@@ -24,6 +17,40 @@ configs:
         uid: "loki"
         url: "http://loki:3100"
         version: 1
+      - access: "proxy"
+        basicAuth: false
+        isDefault: true
+        name: "prometheus"
+        type: "prometheus"
+        uid: "prometheus"
+        url: "http://prometheus:9090"
+      - access: "proxy"
+        basicAuth: false
+        jsonData:
+          nodeGraph:
+            enabled: true
+          serviceMap:
+            datasourceUid: "prometheus"
+          tracesToLogs:
+            datasourceUid:
+              access: "proxy"
+              basicAuth: false
+              isDefault: false
+              name: "loki"
+              orgId: 1
+              type: "loki"
+              uid: "loki"
+              url: "http://loki:3100"
+              version: 1
+            filterByTraceID: false
+            spanEndTimeShift: "500ms"
+            spanStartTimeShift: "-500ms"
+            tags:
+            - "beast"
+        name: "tempo"
+        type: "tempo"
+        uid: "tempo"
+        url: "http://tempo:3200"
   loki_config:
     content: |-
       auth_enabled: false
@@ -105,3 +132,76 @@ configs:
       server:
         http_listen_address: "0.0.0.0"
         http_listen_port: 9080
+  tempo_config:
+    content: |-
+      compactor:
+        compaction:
+          block_retention: "1h"
+          compacted_block_retention: "10m"
+          compaction_window: "1h"
+          max_block_bytes: 100000000
+      distributor:
+        receivers:
+          jaeger:
+            protocols:
+              grpc: null
+              thrift_binary: null
+              thrift_compact: null
+              thrift_http: null
+          otlp:
+            protocols:
+              grpc: null
+              http: null
+          zipkin: null
+      ingester:
+        max_block_bytes: 1000000
+        max_block_duration: "5m"
+        trace_idle_period: "10s"
+      metrics_generator:
+        processor:
+          local_blocks:
+            flush_to_storage: true
+          service_graphs:
+            dimensions:
+            - "http.method"
+            - "http.target"
+            - "http.status_code"
+            - "service.version"
+          span_metrics:
+            dimensions:
+            - "http.method"
+            - "http.target"
+            - "http.status_code"
+            - "service.version"
+        registry:
+          collection_interval: "5s"
+          external_labels:
+            group: "mythical"
+            source: "tempo"
+        storage:
+          path: "/tempo_stor/generator/wal"
+          remote_write:
+          - send_exemplars: true
+            url: "http://prometheus:9090/api/v1/write"
+        traces_storage:
+          path: "/tempo_stor/generator/traces"
+      overrides:
+        metrics_generator_processors:
+        - "service-graphs"
+        - "span-metrics"
+        - "local-blocks"
+      server:
+        http_listen_port: 3200
+      storage:
+        trace:
+          backend: "local"
+          block:
+            bloom_filter_false_positive: 0.050000000000000003
+          local:
+            path: "/tempo_stor/blocks"
+          pool:
+            max_workers: 100
+            queue_depth: 10000
+          wal:
+            path: "/tempo_stor/wal"
+      stream_over_http_enabled: true
