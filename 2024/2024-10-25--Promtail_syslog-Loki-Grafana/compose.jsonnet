@@ -2,7 +2,7 @@
 local c = import 'lib/containers/main.libsonnet';
 local compose = import 'lib/docker_compose.libsonnet';
 
-compose.new({
+local manifest = compose.new({
   local root = self,
   prometheus:
     c.prometheus.new()
@@ -25,4 +25,6 @@ compose.new({
     + c.promtail.withDockerLogs()
     + c.promtail.withLokiPush(root.loki)
     + compose.withDependsOn([root.loki]),
-})
+});
+
+compose.splitFiles(manifest)
