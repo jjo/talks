@@ -49,27 +49,27 @@ local images = import '../images.libsonnet';
     // HACK: matches withVolume() below
     local root = self,
     name:: container.name + '-init',
-    local volume_name = container.name + '-storage',
     service: {
       user: 'root',
       container_name: root.name,
       image: 'alpine',
       group_add: [groupId],
       volumes+: [
-        '%s:/tempo_stor' % volume_name,
+        '%s:/tempo_stor' % container.volume_name,
       ],
       command: ['sh', '-xc', 'chown -R %d:%d /tempo_stor' % [userId, groupId]],
     },
   },
   withVolume():: {
-    local volume_name = self.name + '-storage',
+    local root = self,
+    volume_name:: root.name + '-storage',
     service+: {
       volumes+: [
-        '%s:/tempo_stor' % volume_name,
+        '%s:/tempo_stor' % root.volume_name,
       ],
     },
     volumes+: {
-      [volume_name]: {},
+      [root.volume_name]: {},
     },
   },
   withMetricsRemoteWrite(container, apiRoute=null, send_exemplars=true):: {

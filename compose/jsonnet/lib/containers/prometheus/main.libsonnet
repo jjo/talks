@@ -37,14 +37,15 @@ local images = import '../images.libsonnet';
     },
   },
   withVolume():: {
-    local volume_name = self.name + '-storage',
+    local root = self,
+    volume_name:: root.name + '-storage',
     service+: {
       volumes+: [
-        '%s:/prometheus' % volume_name,
+        '%s:/prometheus' % root.volume_name,
       ],
     },
     volumes+: {
-      [volume_name]: {},
+      [root.volume_name]: {},
     },
   },
   withTargets(containers):: {

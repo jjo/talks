@@ -28,14 +28,15 @@ local images = import '../images.libsonnet';
     },
   },
   withVolume():: {
-    local volume_name = self.name + '-storage',
+    local root = self,
+    volume_name:: root.name + '-storage',
     service+: {
       volumes+: [
-        '%s:/data' % volume_name,
+        '%s:/data' % root.volume_name,
       ],
     },
     volumes+: {
-      [volume_name]: {},
+      [root.volume_name]: {},
     },
   },
   withAuth(user, password):: {
