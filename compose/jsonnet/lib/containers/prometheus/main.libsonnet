@@ -6,6 +6,7 @@ local images = import '../images.libsonnet';
     local root = self,
     name:: name,
     port:: port,
+    metrics_port:: root.port,
     config_name:: root.name + '_config',
     service: {
       image: images.prometheus,
@@ -49,13 +50,18 @@ local images = import '../images.libsonnet';
   withTargets(containers):: {
     config+: {
       scrape_configs+: [
+        local metrics_path = std.get(c, 'metrics_path', null);
         {
           job_name: c.name,
+          [if metrics_path != null then 'metrics_path']: metrics_path,
           static_configs: [
-            { targets: ['%s:%d' % [c.name, c.port]] },
+            {
+              targets: ['%s:%d' % [c.name, c.metrics_port]],
+            },
           ],
         }
         for c in containers
+        if std.objectHasAll(c, 'metrics_port')
       ],
     },
   },

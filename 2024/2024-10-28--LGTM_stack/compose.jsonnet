@@ -14,7 +14,7 @@ local manifest = compose.new({
   prometheus:
     c.prometheus.new()
     + c.prometheus.withVolume()
-    + c.prometheus.withTargets([root.prometheus, root.loki, root.promtail, root.grafana, root.tempo])
+    + c.prometheus.withTargets(std.objectValues(root))
     + c.prometheus.withRemoteWrite([root.mimir], { 'X-Scope-OrgID': mimirConf.orgId }),
   loki:
     c.loki.new()

@@ -6,6 +6,8 @@ local images = import '../images.libsonnet';
     local root = self,
     name:: name,
     port:: port,
+    metrics_port:: root.port,
+    metrics_path:: '/minio/v2/metrics/bucket',
     service: {
       image: images.minio,
       container_name: root.name,
@@ -15,6 +17,7 @@ local images = import '../images.libsonnet';
       _environment:: {
         MINIO_ROOT_USER: 'admin',
         MINIO_ROOT_PASSWORD: 'supersecret',
+        MINIO_PROMETHEUS_AUTH_TYPE: 'public',
       },
       environment: [
         '%s=%s' % [kv.key, kv.value]
