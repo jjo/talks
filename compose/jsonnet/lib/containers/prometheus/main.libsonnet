@@ -10,6 +10,10 @@ local images = import '../images.libsonnet';
     service: {
       image: images.prometheus,
       container_name: root.name,
+      command: [
+        '--config.file=/etc/prometheus/prometheus.yml',
+        '--web.enable-remote-write-receiver',
+      ],
       ports: [
         '%d:%d' % [root.port, root.port],
       ],

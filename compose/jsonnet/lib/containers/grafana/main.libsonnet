@@ -109,7 +109,7 @@ local images = import '../images.libsonnet';
         httpHeaderValue1: orgId,
       },
     },
-    withTempo(container, mimirDS, lokiDS, isDefault=false):: {
+    withTempo(container, promDS, lokiDS, isDefault=false):: {
       name: container.name,
       uid: container.name,
       url: 'http://%s:%d' % [container.name, container.port],
@@ -128,7 +128,7 @@ local images = import '../images.libsonnet';
             spanEndTimeShift: "500ms"
             spanStartTimeShift: "-500ms"
             tags: ['beast']
-        ||| % [mimirDS, lokiDS],
+        ||| % [promDS, lokiDS],
       ),
     },
   },

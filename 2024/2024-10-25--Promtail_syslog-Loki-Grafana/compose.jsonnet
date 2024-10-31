@@ -3,11 +3,11 @@ local c = import 'lib/containers/main.libsonnet';
 local compose = import 'lib/docker_compose.libsonnet';
 
 compose.new({
-  local this = self,
+  local root = self,
   prometheus:
     c.prometheus.new()
     + c.prometheus.withVolume()
-    + c.prometheus.withTargets([this.prometheus, this.loki, this.promtail, this.grafana]),
+    + c.prometheus.withTargets([root.prometheus, root.loki, root.promtail, root.grafana]),
   loki:
     c.loki.new()
     + c.loki.withVolume(),
@@ -15,14 +15,14 @@ compose.new({
     c.grafana.new()
     + c.grafana.withVolume()
     + c.grafana.withDatasources([
-      c.grafana.datasource.withPrometheus(this.prometheus, true),
-      c.grafana.datasource.withLoki(this.loki),
+      c.grafana.datasource.withPrometheus(root.prometheus, true),
+      c.grafana.datasource.withLoki(root.loki),
     ])
-    + compose.withDependsOn([this.prometheus, this.loki]),
+    + compose.withDependsOn([root.prometheus, root.loki]),
   promtail:
     c.promtail.new()
     + c.promtail.withSyslog()
     + c.promtail.withDockerLogs()
-    + c.promtail.withLokiPush(this.loki)
-    + compose.withDependsOn([this.loki]),
+    + c.promtail.withLokiPush(root.loki)
+    + compose.withDependsOn([root.loki]),
 })
