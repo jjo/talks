@@ -6,6 +6,7 @@ local images = import '../images.libsonnet';
     local root = self,
     name:: name,
     port:: port,
+    metrics_port:: root.port,
     config_name:: root.name + '_config',
     service: {
       image: images.loki,

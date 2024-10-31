@@ -4,6 +4,7 @@
     local root = self,
     name:: name,
     port:: port,
+    // metrics_port:: root.port,
     service: {
       container_name: root.name,
       ports:

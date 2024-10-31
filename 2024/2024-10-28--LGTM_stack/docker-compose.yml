@@ -63,6 +63,7 @@ services:
     entrypoint:
       - ""
     environment:
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
       - MINIO_ROOT_PASSWORD=supersecret
       - MINIO_ROOT_USER=mimir
     image: minio/minio:latest

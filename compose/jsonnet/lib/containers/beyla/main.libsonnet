@@ -6,6 +6,7 @@ local images = import '../images.libsonnet';
     local root = self,
     name:: name,
     port:: port,
+    metrics_port:: root.port,
     service: {
       image: images.beyla,
       container_name: root.name,
