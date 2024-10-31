@@ -43,6 +43,20 @@ services:
       - 3000:3000
     volumes:
       - grafana-storage:/var/lib/grafana
+  grafana-plugin-grafana-traces-app:
+    command: []
+    container_name: grafana-plugin-grafana-traces-app
+    entrypoint:
+      - grafana
+      - cli
+      - --pluginUrl=https://storage.googleapis.com/integration-artifacts/grafana-exploretraces-app/grafana-exploretraces-app-latest.zip
+      - plugins
+      - install
+      - grafana-traces-app
+    image: grafana/grafana:11.3.0-ubuntu
+    user: grafana
+    volumes:
+      - grafana-storage:/var/lib/grafana
   k6:
     command: run --out json /k6/load_test.js
     container_name: k6

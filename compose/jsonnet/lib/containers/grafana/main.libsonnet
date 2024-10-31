@@ -48,14 +48,15 @@ local images = import '../images.libsonnet';
     },
   },
   withVolume():: {
-    local volume_name = self.name + '-storage',
+    local root = self,
+    volume_name:: root.name + '-storage',
     service+: {
       volumes+: [
-        '%s:/var/lib/grafana' % volume_name,
+        '%s:/var/lib/grafana' % root.volume_name,
       ],
     },
     volumes+: {
-      [volume_name]: {},
+      [root.volume_name]: {},
     },
   },
   withDatasources(datasources=[]):: {
@@ -133,4 +134,22 @@ local images = import '../images.libsonnet';
       ),
     },
   },
+
+  initPlugin(container, pluginUrl, pluginName):: {
+    // HACK: matches withVolume() below
+    local root = self,
+    name:: container.name + '-plugin-%s' % pluginName,
+    service: {
+      user: 'grafana',
+      container_name: root.name,
+      image: container.service.image,
+      volumes+: [
+        '%s:/var/lib/grafana' % container.volume_name,
+      ],
+      entrypoint: std.split('grafana cli --pluginUrl=%s plugins install %s' % [pluginUrl, pluginName], ' '),
+      command: [],
+
+    },
+  },
+
 }

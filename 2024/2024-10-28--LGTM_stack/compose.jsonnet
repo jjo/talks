@@ -25,6 +25,12 @@ local manifest = compose.new({
     c.tempo.new()
     + c.tempo.withVolume()
     + compose.withDependsOn([root.tempo_init]),
+  grafana_plugin_traces_app:
+    c.grafana.initPlugin(
+      root.grafana,
+      'https://storage.googleapis.com/integration-artifacts/grafana-exploretraces-app/grafana-exploretraces-app-latest.zip',
+      'grafana-traces-app'
+    ),
   grafana:
     local datasources = std.objectValues({
       prom: c.grafana.datasource.withPrometheus(root.prometheus, true),
