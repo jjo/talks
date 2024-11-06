@@ -15,23 +15,11 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_USERS_DEFAULT_THEME=light
+      - GF_INSTALL_PLUGINS=grafana-lokiexplore-app,grafana-exploretraces-app,grafana-pyroscope-app
+      - GF_FEATURE_TOGGLES_ENABLE=flameGraph traceqlSearch traceQLStreaming correlations metricsSummary traceqlEditor traceToMetrics traceToProfiles datatrails
     image: grafana/grafana:11.3.0-ubuntu
     ports:
       - 3000:3000
-    volumes:
-      - grafana-storage:/var/lib/grafana
-  grafana-plugin-grafana-traces-app:
-    command: []
-    container_name: grafana-plugin-grafana-traces-app
-    entrypoint:
-      - grafana
-      - cli
-      - --pluginUrl=https://storage.googleapis.com/integration-artifacts/grafana-exploretraces-app/grafana-exploretraces-app-latest.zip
-      - plugins
-      - install
-      - grafana-traces-app
-    image: grafana/grafana:11.3.0-ubuntu
-    user: grafana
     volumes:
       - grafana-storage:/var/lib/grafana
   loki:
