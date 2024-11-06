@@ -23,6 +23,8 @@ local images = import '../images.libsonnet';
         'GF_AUTH_ANONYMOUS_ENABLED=true',
         'GF_AUTH_ANONYMOUS_ORG_ROLE=Admin',
         'GF_USERS_DEFAULT_THEME=light',
+        'GF_INSTALL_PLUGINS=grafana-lokiexplore-app,grafana-exploretraces-app,grafana-pyroscope-app',
+        'GF_FEATURE_TOGGLES_ENABLE=flameGraph traceqlSearch traceQLStreaming correlations metricsSummary traceqlEditor traceToMetrics traceToProfiles datatrails',
       ],
       configs: [
         {
@@ -134,22 +136,4 @@ local images = import '../images.libsonnet';
       ),
     },
   },
-
-  initPlugin(container, pluginUrl, pluginName):: {
-    // HACK: matches withVolume() below
-    local root = self,
-    name:: container.name + '-plugin-%s' % pluginName,
-    service: {
-      user: 'grafana',
-      container_name: root.name,
-      image: container.service.image,
-      volumes+: [
-        '%s:/var/lib/grafana' % container.volume_name,
-      ],
-      entrypoint: std.split('grafana cli --pluginUrl=%s plugins install %s' % [pluginUrl, pluginName], ' '),
-      command: [],
-
-    },
-  },
-
 }
