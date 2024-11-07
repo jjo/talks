@@ -51,7 +51,7 @@ services:
       - source: prometheus_config
         target: /etc/prometheus/prometheus.yml
     container_name: prometheus
-    image: prom/prometheus:v3.0.0-beta.1
+    image: prom/prometheus:v3.0.0-rc.0
     ports:
       - 9090:9090
     volumes:
