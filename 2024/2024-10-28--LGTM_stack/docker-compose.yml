@@ -60,7 +60,7 @@ services:
     command:
       - sh
       - -c
-      - mkdir -p /data/mimir && minio server --quiet /data
+      - mkdir -p /data/mimir && minio server --console-address ":9001" --quiet /data
     container_name: minio
     entrypoint:
       - ""
@@ -71,6 +71,7 @@ services:
     image: minio/minio:latest
     ports:
       - 9000:9000
+      - 9001:9001
     volumes:
       - minio-storage:/data
   prometheus:
@@ -81,7 +82,7 @@ services:
       - source: prometheus_config
         target: /etc/prometheus/prometheus.yml
     container_name: prometheus
-    image: prom/prometheus:v3.0.0-rc.0
+    image: prom/prometheus:v3.0.0-rc.1
     ports:
       - 9090:9090
     volumes:

@@ -6,6 +6,7 @@ local images = import '../images.libsonnet';
     local root = self,
     name:: name,
     port:: port,
+    ui_port:: port + 1,
     metrics_port:: root.port,
     metrics_path:: '/minio/v2/metrics/bucket',
     service: {
@@ -13,6 +14,7 @@ local images = import '../images.libsonnet';
       container_name: root.name,
       ports: [
         '%d:%d' % [root.port, root.port],
+        '%d:%d' % [root.ui_port, root.ui_port],
       ],
       _environment:: {
         MINIO_ROOT_USER: 'admin',
@@ -24,7 +26,11 @@ local images = import '../images.libsonnet';
         for kv in std.objectKeysValues(self._environment)
       ],
       entrypoint: [''],
-      command: ['sh', '-c', 'mkdir -p /data/mimir && minio server --quiet /data'],
+      command: [
+        'sh',
+        '-c',
+        'mkdir -p /data/mimir && minio server --console-address ":%d" --quiet /data' % root.ui_port,
+      ],
     },
   },
   withVolume():: {
