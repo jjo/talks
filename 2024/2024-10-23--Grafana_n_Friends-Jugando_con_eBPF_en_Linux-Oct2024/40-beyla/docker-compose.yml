@@ -40,7 +40,7 @@ services:
       - GF_USERS_DEFAULT_THEME=light
       - GF_INSTALL_PLUGINS=grafana-lokiexplore-app,grafana-exploretraces-app,grafana-pyroscope-app
       - GF_FEATURE_TOGGLES_ENABLE=flameGraph traceqlSearch traceQLStreaming correlations metricsSummary traceqlEditor traceToMetrics traceToProfiles datatrails
-    image: grafana/grafana:11.4.0-ubuntu
+    image: grafana/grafana:11.5.1-ubuntu
     ports:
       - 3000:3000
     volumes:
