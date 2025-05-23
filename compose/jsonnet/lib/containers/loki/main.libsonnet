@@ -15,7 +15,10 @@ local images = import '../images.libsonnet';
         '%d:%d' % [root.port, root.port],
         '%d:%d' % [grpc_port, grpc_port],
       ],
-      command: '-config.file=/etc/loki/loki.yaml',
+      command: [
+        '-config.file=/etc/loki/loki.yaml',
+        '--pattern-ingester.enabled=true',
+      ],
       healthcheck: {
         test: ['CMD-SHELL', 'wget -q --tries=1 -O- http://localhost:%d/ready || exit 1' % root.port],
         interval: '30s',
