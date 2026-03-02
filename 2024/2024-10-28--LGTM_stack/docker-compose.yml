@@ -17,7 +17,7 @@ services:
       - GF_USERS_DEFAULT_THEME=light
       - GF_INSTALL_PLUGINS=grafana-lokiexplore-app,grafana-exploretraces-app,grafana-pyroscope-app
       - GF_FEATURE_TOGGLES_ENABLE=flameGraph traceqlSearch traceQLStreaming correlations metricsSummary traceqlEditor traceToMetrics traceToProfiles datatrails
-    image: grafana/grafana:12.0.1-ubuntu
+    image: grafana/grafana:12.4.0-ubuntu
     ports:
       - 3000:3000
     volumes:
@@ -38,7 +38,7 @@ services:
         - CMD-SHELL
         - wget -q --tries=1 -O- http://localhost:3100/ready || exit 1
       timeout: 3s
-    image: grafana/loki:3.5.1
+    image: grafana/loki:3.6.7
     ports:
       - 3100:3100
       - 9096:9096
@@ -70,7 +70,7 @@ services:
       - MINIO_PROMETHEUS_AUTH_TYPE=public
       - MINIO_ROOT_PASSWORD=supersecret
       - MINIO_ROOT_USER=mimir
-    image: minio/minio:latest
+    image: pgsty/minio:latest
     ports:
       - 9000:9000
       - 9001:9001
@@ -84,7 +84,7 @@ services:
       - source: prometheus_config
         target: /etc/prometheus/prometheus.yml
     container_name: prometheus
-    image: prom/prometheus:v3.4.0
+    image: prom/prometheus:v3.10.0
     ports:
       - 9090:9090
     volumes:

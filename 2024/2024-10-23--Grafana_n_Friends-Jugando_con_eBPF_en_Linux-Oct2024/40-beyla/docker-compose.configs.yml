@@ -196,7 +196,7 @@ configs:
         trace:
           backend: "local"
           block:
-            bloom_filter_false_positive: 0.050000000000000003
+            bloom_filter_false_positive: 0.05
           local:
             path: "/tempo_stor/blocks"
           pool:
