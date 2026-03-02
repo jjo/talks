@@ -29,7 +29,7 @@ local images = import '../images.libsonnet';
       command: [
         'sh',
         '-c',
-        'mkdir -p /data/mimir && minio server --console-address ":%d" --quiet /data' % root.ui_port,
+        'mkdir -p /data/mimir && minio server --console-address ":%d" /data' % root.ui_port,
       ],
     },
   },

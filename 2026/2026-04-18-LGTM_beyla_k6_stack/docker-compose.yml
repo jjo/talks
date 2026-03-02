@@ -1,6 +1,29 @@
 include:
   - docker-compose.configs.yml
 services:
+  beyla:
+    cap_add:
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - NET_RAW
+      - DAC_READ_SEARCH
+      - SYS_PTRACE
+      - PERFMON
+      - BPF
+      - CHECKPOINT_RESTORE
+    container_name: beyla
+    environment:
+      - BEYLA_PROMETHEUS_PORT=9400
+      - BEYLA_OPEN_PORT=8080
+      - OTEL_SERVICE_NAME=simplesrv
+      - OTEL_EXPORTER_OTLP_TRACES_INSECURE=true
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://tempo:4317
+    image: grafana/beyla:latest
+    pid: service:simplesrv
+    ports:
+      - 9400:9400
+    privileged: true
   grafana:
     configs:
       - source: grafana_config
@@ -22,6 +45,15 @@ services:
       - 3000:3000
     volumes:
       - grafana-storage:/var/lib/grafana
+  k6:
+    command: run --out json /k6/load_test.js
+    container_name: k6
+    environment: []
+    image: loadimpact/k6:latest
+    ports: []
+    restart: unless-stopped
+    volumes:
+      - ./k6/load_test.js:/k6/load_test.js
   loki:
     command:
       - -config.file=/etc/loki/loki.yaml
@@ -103,6 +135,14 @@ services:
       - 1514:1514/udp
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+  simplesrv:
+    build:
+      context: simplesrv/
+      dockerfile: Dockerfile
+    container_name: simplesrv
+    environment: []
+    ports:
+      - 8081:8080
   tempo:
     command: -config.file=/etc/tempo/tempo.yaml
     configs:
