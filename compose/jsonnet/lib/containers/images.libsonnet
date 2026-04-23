@@ -7,4 +7,5 @@
   promtail: 'grafana/promtail:latest',
   minio: 'pgsty/minio:latest',
   mimir: 'grafana/mimir:latest',
+  alloy: 'grafana/alloy:v1.8.1',
 }

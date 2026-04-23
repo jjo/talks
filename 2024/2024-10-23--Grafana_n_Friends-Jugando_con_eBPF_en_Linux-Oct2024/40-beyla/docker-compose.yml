@@ -1,154 +1,154 @@
 include:
-  - docker-compose.configs.yml
+- "docker-compose.configs.yml"
 services:
   beyla:
     cap_add:
-      - SYS_ADMIN
-      - SYS_RESOURCE
-      - NET_RAW
-      - DAC_READ_SEARCH
-      - SYS_PTRACE
-      - PERFMON
-      - BPF
-      - CHECKPOINT_RESTORE
-    container_name: beyla
+    - "SYS_ADMIN"
+    - "SYS_RESOURCE"
+    - "NET_RAW"
+    - "DAC_READ_SEARCH"
+    - "SYS_PTRACE"
+    - "PERFMON"
+    - "BPF"
+    - "CHECKPOINT_RESTORE"
+    container_name: "beyla"
     environment:
-      - BEYLA_PROMETHEUS_PORT=9400
-      - BEYLA_OPEN_PORT=8080
-      - OTEL_SERVICE_NAME=simplesrv
-      - OTEL_EXPORTER_OTLP_TRACES_INSECURE=true
-      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
-      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://tempo:4317
-    image: grafana/beyla:latest
-    pid: service:simplesrv
+    - "BEYLA_PROMETHEUS_PORT=9400"
+    - "BEYLA_OPEN_PORT=8080"
+    - "OTEL_SERVICE_NAME=simplesrv"
+    - "OTEL_EXPORTER_OTLP_TRACES_INSECURE=true"
+    - "OTEL_EXPORTER_OTLP_PROTOCOL=grpc"
+    - "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://tempo:4317"
+    image: "grafana/beyla:latest"
+    pid: "service:simplesrv"
     ports:
-      - 9400:9400
+    - "9400:9400"
     privileged: true
   grafana:
     configs:
-      - source: grafana_config
-        target: /etc/grafana/grafana.ini
-      - source: grafana_datasources
-        target: /etc/grafana/provisioning/datasources/datasources.yaml
-    container_name: grafana
+    - source: "grafana_config"
+      target: "/etc/grafana/grafana.ini"
+    - source: "grafana_datasources"
+      target: "/etc/grafana/provisioning/datasources/datasources.yaml"
+    container_name: "grafana"
     depends_on:
-      - prometheus
-      - loki
+    - "prometheus"
+    - "loki"
     environment:
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-      - GF_USERS_DEFAULT_THEME=light
-      - GF_INSTALL_PLUGINS=grafana-lokiexplore-app,grafana-exploretraces-app,grafana-pyroscope-app
-      - GF_FEATURE_TOGGLES_ENABLE=flameGraph traceqlSearch traceQLStreaming correlations metricsSummary traceqlEditor traceToMetrics traceToProfiles datatrails
-    image: grafana/grafana:12.4.0-ubuntu
+    - "GF_AUTH_ANONYMOUS_ENABLED=true"
+    - "GF_AUTH_ANONYMOUS_ORG_ROLE=Admin"
+    - "GF_USERS_DEFAULT_THEME=light"
+    - "GF_INSTALL_PLUGINS=grafana-lokiexplore-app,grafana-exploretraces-app,grafana-pyroscope-app"
+    - "GF_FEATURE_TOGGLES_ENABLE=flameGraph traceqlSearch traceQLStreaming correlations metricsSummary traceqlEditor traceToMetrics traceToProfiles datatrails"
+    image: "grafana/grafana:12.4.0-ubuntu"
     ports:
-      - 3000:3000
+    - "3000:3000"
     volumes:
-      - grafana-storage:/var/lib/grafana
+    - "grafana-storage:/var/lib/grafana"
   k6:
-    command: run --out json /k6/load_test.js
-    container_name: k6
+    command: "run --out json /k6/load_test.js"
+    container_name: "k6"
     environment: []
-    image: loadimpact/k6:latest
+    image: "loadimpact/k6:latest"
     ports: []
-    restart: unless-stopped
+    restart: "unless-stopped"
     volumes:
-      - ./k6/load_test.js:/k6/load_test.js
+    - "./k6/load_test.js:/k6/load_test.js"
   loki:
     command:
-      - -config.file=/etc/loki/loki.yaml
-      - --pattern-ingester.enabled=true
+    - "-config.file=/etc/loki/loki.yaml"
+    - "--pattern-ingester.enabled=true"
     configs:
-      - source: loki_config
-        target: /etc/loki/loki.yaml
-    container_name: loki
+    - source: "loki_config"
+      target: "/etc/loki/loki.yaml"
+    container_name: "loki"
     healthcheck:
-      interval: 30s
+      interval: "30s"
       retries: 3
-      start_period: 30s
+      start_period: "30s"
       test:
-        - CMD-SHELL
-        - wget -q --tries=1 -O- http://localhost:3100/ready || exit 1
-      timeout: 3s
-    image: grafana/loki:3.6.7
+      - "CMD-SHELL"
+      - "wget -q --tries=1 -O- http://localhost:3100/ready || exit 1"
+      timeout: "3s"
+    image: "grafana/loki:3.6.7"
     ports:
-      - 3100:3100
-      - 9096:9096
-    restart: unless-stopped
+    - "3100:3100"
+    - "9096:9096"
+    restart: "unless-stopped"
     volumes:
-      - loki-storage:/loki
+    - "loki-storage:/loki"
   prometheus:
     command:
-      - --config.file=/etc/prometheus/prometheus.yml
-      - --web.enable-remote-write-receiver
+    - "--config.file=/etc/prometheus/prometheus.yml"
+    - "--web.enable-remote-write-receiver"
     configs:
-      - source: prometheus_config
-        target: /etc/prometheus/prometheus.yml
-    container_name: prometheus
-    image: prom/prometheus:v3.10.0
+    - source: "prometheus_config"
+      target: "/etc/prometheus/prometheus.yml"
+    container_name: "prometheus"
+    image: "prom/prometheus:v3.10.0"
     ports:
-      - 9090:9090
+    - "9090:9090"
     volumes:
-      - prometheus-storage:/prometheus
+    - "prometheus-storage:/prometheus"
   promtail:
-    command: -config.file=/etc/promtail/promtail.yml
+    command: "-config.file=/etc/promtail/promtail.yml"
     configs:
-      - source: promtail_config
-        target: /etc/promtail/promtail.yml
-    container_name: promtail
+    - source: "promtail_config"
+      target: "/etc/promtail/promtail.yml"
+    container_name: "promtail"
     depends_on:
-      - loki
-    image: grafana/promtail:latest
+    - "loki"
+    image: "grafana/promtail:latest"
     ports:
-      - 9080:9080
+    - "9080:9080"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    - "/var/run/docker.sock:/var/run/docker.sock"
   simplesrv:
     build:
-      context: simplesrv/
-      dockerfile: Dockerfile
-    container_name: simplesrv
+      context: "simplesrv/"
+      dockerfile: "Dockerfile"
+    container_name: "simplesrv"
     environment: []
     ports:
-      - 8080:8080
+    - "8080:8080"
   tempo:
-    command: -config.file=/etc/tempo/tempo.yaml
+    command: "-config.file=/etc/tempo/tempo.yaml"
     configs:
-      - source: tempo_config
-        target: /etc/tempo/tempo.yaml
-    container_name: tempo
+    - source: "tempo_config"
+      target: "/etc/tempo/tempo.yaml"
+    container_name: "tempo"
     depends_on:
-      - tempo-init
+    - "tempo-init"
     healthcheck:
-      interval: 30s
+      interval: "30s"
       retries: 3
-      start_period: 30s
+      start_period: "30s"
       test:
-        - CMD-SHELL
-        - wget -q --tries=1 -O- http://localhost:3200/ready || exit 1
-      timeout: 3s
-    image: grafana/tempo:2.7.0
+      - "CMD-SHELL"
+      - "wget -q --tries=1 -O- http://localhost:3200/ready || exit 1"
+      timeout: "3s"
+    image: "grafana/tempo:2.7.0"
     ports:
-      - 3200:3200
-      - 4317:4317
-      - 4318:4318
-      - 9411:9411
-      - 14250:14250
-    restart: unless-stopped
+    - "3200:3200"
+    - "4317:4317"
+    - "4318:4318"
+    - "9411:9411"
+    - "14250:14250"
+    restart: "unless-stopped"
     volumes:
-      - tempo-storage:/tempo_stor
+    - "tempo-storage:/tempo_stor"
   tempo-init:
     command:
-      - sh
-      - -xc
-      - chown -R 10001:10001 /tempo_stor
-    container_name: tempo-init
+    - "sh"
+    - "-xc"
+    - "chown -R 10001:10001 /tempo_stor"
+    container_name: "tempo-init"
     group_add:
-      - 10001
-    image: alpine
-    user: root
+    - 10001
+    image: "alpine"
+    user: "root"
     volumes:
-      - tempo-storage:/tempo_stor
+    - "tempo-storage:/tempo_stor"
 volumes:
   grafana-storage: {}
   loki-storage: {}

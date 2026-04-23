@@ -1,4 +1,57 @@
 configs:
+  alloy_config:
+    content: |
+      prometheus.remote_write "mimir" {
+        endpoint {
+          url = "http://mimir:8080/api/v1/push"
+          headers = {
+            "X-Scope-OrgID" = "demo",
+          }
+        }
+      }
+
+      prometheus.scrape "alloy" {
+        targets = [{"__address__" = "alloy:12345"}]
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+
+      prometheus.scrape "beyla" {
+        targets = [{"__address__" = "beyla:9400"}]
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+
+      prometheus.scrape "grafana" {
+        targets = [{"__address__" = "grafana:3000"}]
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+
+      prometheus.scrape "loki" {
+        targets = [{"__address__" = "loki:3100"}]
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+
+      prometheus.scrape "mimir" {
+        targets = [{"__address__" = "mimir:8080"}]
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+
+      prometheus.scrape "minio" {
+        targets = [{"__address__" = "minio:9000"}]
+        metrics_path = "/minio/v2/metrics/bucket"
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+
+      prometheus.scrape "promtail" {
+        targets = [{"__address__" = "promtail:9080"}]
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
   grafana_config:
     content: |
       [feature_toggles]
@@ -19,7 +72,7 @@ configs:
         version: 1
       - access: "proxy"
         basicAuth: false
-        isDefault: false
+        isDefault: true
         jsonData:
           httpHeaderName1: "X-Scope-OrgID"
           implementation: "cortex"
@@ -29,13 +82,6 @@ configs:
         type: "prometheus"
         uid: "mimir"
         url: "http://mimir:8080/prometheus"
-      - access: "proxy"
-        basicAuth: false
-        isDefault: true
-        name: "prometheus"
-        type: "prometheus"
-        uid: "prometheus"
-        url: "http://prometheus:9090"
       - access: "proxy"
         basicAuth: false
         jsonData:
@@ -138,44 +184,6 @@ configs:
       server:
         log_level: "info"
       target: "all,overrides-exporter"
-  prometheus_config:
-    content: |-
-      global:
-        scrape_interval: "15s"
-      remote_write:
-      - headers:
-          X-Scope-OrgID: "demo"
-        url: "http://mimir:8080/api/v1/push"
-      scrape_configs:
-      - job_name: "beyla"
-        static_configs:
-        - targets:
-          - "beyla:9400"
-      - job_name: "grafana"
-        static_configs:
-        - targets:
-          - "grafana:3000"
-      - job_name: "loki"
-        static_configs:
-        - targets:
-          - "loki:3100"
-      - job_name: "mimir"
-        static_configs:
-        - targets:
-          - "mimir:8080"
-      - job_name: "minio"
-        metrics_path: "/minio/v2/metrics/bucket"
-        static_configs:
-        - targets:
-          - "minio:9000"
-      - job_name: "prometheus"
-        static_configs:
-        - targets:
-          - "prometheus:9090"
-      - job_name: "promtail"
-        static_configs:
-        - targets:
-          - "promtail:9080"
   promtail_config:
     content: |-
       clients:

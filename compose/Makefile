@@ -7,6 +7,7 @@ rebuild: update-images
 	@for dir in $(DIRS); do \
 		echo "Rebuilding $$dir/docker-compose.yml"; \
 		$(MAKE) -s -C $$dir compose; \
+		yq -rP $$dir/docker-compose.configs.yml | sponge $$dir/docker-compose.configs.yml; \
 	done
 
 update-images:

@@ -7,5 +7,6 @@
   minio: import 'minio/main.libsonnet',
   promtail: import 'promtail/main.libsonnet',
   beyla: import 'beyla/main.libsonnet',
+  alloy: import 'alloy/main.libsonnet',
   generic: import 'generic/main.libsonnet',
 }

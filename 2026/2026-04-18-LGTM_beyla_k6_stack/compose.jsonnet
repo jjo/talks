@@ -24,11 +24,11 @@ local manifest = compose.new({
       + c.generic.withLocalVolume('./k6/load_test.js', '/k6/load_test.js')
       + c.generic.withField('restart', 'unless-stopped')
       + c.generic.withCommand('run --out json /k6/load_test.js'),
-  prometheus:
-    c.prometheus.new()
-    + c.prometheus.withVolume()
-    + c.prometheus.withTargets(std.objectValues(root))
-    + c.prometheus.withRemoteWrite([root.mimir], { 'X-Scope-OrgID': mimirConf.orgId }),
+  alloy:
+    c.alloy.new()
+    + c.alloy.withVolume()
+    + c.alloy.withRemoteWrite([root.mimir], { 'X-Scope-OrgID': mimirConf.orgId })
+    + c.alloy.withTargets(std.objectValues(root), root.mimir),
   loki:
     c.loki.new()
     + c.loki.withVolume(),
@@ -41,15 +41,14 @@ local manifest = compose.new({
     + compose.withDependsOn([root.tempo_init]),
   grafana:
     local datasources = std.objectValues({
-      prom: c.grafana.datasource.withPrometheus(root.prometheus, true),
       loki: c.grafana.datasource.withLoki(root.loki),
-      mimir: c.grafana.datasource.withMimir(root.mimir, mimirConf.orgId),
+      mimir: c.grafana.datasource.withMimir(root.mimir, mimirConf.orgId, true),
       tempo: c.grafana.datasource.withTempo(root.tempo, self.mimir.uid, self.loki),
     });
     c.grafana.new()
     + c.grafana.withVolume()
     + c.grafana.withDatasources(datasources)
-    + compose.withDependsOn([root.prometheus, root.loki]),
+    + compose.withDependsOn([root.alloy, root.loki]),
   promtail:
     c.promtail.new()
     + c.promtail.withSyslog()
