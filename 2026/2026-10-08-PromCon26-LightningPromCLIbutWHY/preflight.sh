@@ -21,8 +21,12 @@ step "build promql-cli"
 "$B" version
 
 step "node-exporter (docker)"
-if ! docker ps --format '{{.Names}}' | grep -qx node-exporter; then
-	docker run -d --rm --name node-exporter -p 9100:9100 --pid=host \
+if docker ps -a --format '{{.Names}}' | grep -qx node-exporter; then
+	# exists (it survives restarts): just make sure it is running
+	docker start node-exporter >/dev/null
+	sleep 1
+else
+	docker run -d --name node-exporter --restart unless-stopped -p 9100:9100 --pid=host \
 		-v /:/host:ro,rslave quay.io/prometheus/node-exporter:latest --path.rootfs=/host >/dev/null
 	sleep 2
 fi
