@@ -19,6 +19,7 @@ Lightning talk, PromCon EU 2026 (under 5 minutes). It is a live demo, and `light
 | File | What it is |
 |---|---|
 | `lightning-promql-cli-deck.html` | Backup deck. Open it in a browser: arrows or space to move, `T` starts the timer |
+| `lightning-promql-cli-deck.pdf` | The same deck as a PDF, one slide per page. Re-render it after editing the HTML: `google-chrome --headless --no-pdf-header-footer --virtual-time-budget=8000 --print-to-pdf=lightning-promql-cli-deck.pdf lightning-promql-cli-deck.html` |
 | `CUE.md` | Run of show: timings, what to say, what to type, and what to do when something breaks |
 | `preflight.sh` | Run about 10 minutes before the talk: builds promql-cli, starts node-exporter, port-forwards the Prometheus, saves the snapshots, smoke-tests the contract |
 | `demo.sh` | The live demo sequencer: one real REPL per beat. `OFFLINE=1` uses the saved snapshots, `REPL=prompt` the completion-popup backend, `./demo.sh 3` jumps to a beat |

@@ -110,6 +110,16 @@ footer.slot b { color: var(--ink); font-weight: 600; }
 .nav { position: fixed; right: 14px; top: 46px; z-index: 5; display: flex; gap: 6px; }
 .nav button { font: 600 14px/1 var(--display); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; width: 34px; height: 30px; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .progress { transition: none; } }
+
+/* Print / PDF: every slide on its own 1280x720 page, without the on-screen controls. */
+@page { size: 1280px 720px; margin: 0; }
+@media print {
+  html, body { height: auto; overflow: visible; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .viewport { position: static; display: block; overflow: visible; }
+  .stage { transform: none !important; width: 1280px; height: auto; }
+  .slide, .slide[hidden] { display: flex !important; position: relative; inset: auto; width: 1280px; height: 720px; break-after: page; overflow: hidden; }
+  .progress, .nav, .timer { display: none !important; }
+}
 </style>
 
 <div class="viewport" id="viewport">
