@@ -6,6 +6,7 @@ PromCon EU 2026 talk by JuanJo Ciarlante ([@jjo](https://github.com/jjo)).
 
 > A yak shave that started with "are these two timeseries related?" and ended with a need to have a matrix solver inside a query engine 😬
 
+- **Recording:** [PromCon EU 2026, Day 1 livestream, from 5h31m](https://www.youtube.com/watch?v=kTD1sjPWrsU&t=19860s).
 - **Slides:** [Google Slides](https://docs.google.com/presentation/d/16Gasf3wwKQXtIknHa_S-p-0oLfbyHY9UiKUIhVIGOkE/edit), or [`shaving-the-promql-yak.pdf`](shaving-the-promql-yak.pdf) in this folder (36 slides, including an appendix with every query in full).
 - **Code:** [jjo/prometheus](https://github.com/jjo/prometheus), branch `jjo/all-add-branches`.
 - **Container images:** [`xjjo/prometheus`](https://hub.docker.com/r/xjjo/prometheus/tags?name=jjo-all), `jjo-all*` tags.
