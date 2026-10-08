@@ -2,6 +2,8 @@
 
 Lightning talk, PromCon EU 2026 (under 5 minutes). It is a live demo, and `lightning-promql-cli-deck.html` is the backup deck: every terminal it shows is captured output from the demo data.
 
+**Recording:** [PromCon EU 2026, Day 2 livestream, from 7h44m](https://www.youtube.com/watch?v=BDryNblRXUE&t=27840s). Companion to the main talk, [Shaving the PromQL Yak](../2026-10-08-PromCon26-ShavingThePromQLYak/).
+
 [promql-cli](https://github.com/jjo/promql-cli) is a PromQL REPL with the real upstream engine inside: no Prometheus server, no TSDB on disk. Data comes from scraping an exporter, from a Prometheus API, or from a plain `.prom` text file. This build uses a Prometheus fork ([jjo/prometheus](https://github.com/jjo/prometheus)) for the new PromQL functions shown in WHY #4.
 
 ## The five WHYs
