@@ -1,0 +1,407 @@
+<meta charset="utf-8">
+<title>promql-cli ✨ .. but WHY?!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<style>
+/* Layout: fixed 1280×720 stage scaled to the viewport; one slide visible; footer = slot clock. Single light look, matching the main PromCon deck. */
+:root {
+  --paper: #f3f2ef;
+  --panel: #ffffff;
+  --ink: #141518;
+  --muted: #5d6068;
+  --line: #e2dfd9;
+  --orange: #f05a1a;
+  --orange-soft: #fde6da;
+  --green: #12813a;
+  --red: #cf2e2e;
+  --term: #16181d;
+  --term-ink: #e6e3dc;
+  --term-dim: #8a8f99;
+  --display: "Poppins", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--display); overflow: hidden; }
+.viewport { position: fixed; inset: 0; display: grid; place-items: center; overflow: hidden; background: var(--paper); }
+.stage { width: 1280px; height: 720px; position: relative; transform: scale(var(--k, 1)); transform-origin: center; flex: none; }
+.slide { position: absolute; inset: 0; padding: 56px 72px 84px; box-sizing: border-box; background: var(--paper); display: flex; flex-direction: column; gap: 22px; }
+.slide[hidden] { display: none !important; }
+
+.kicker { font-weight: 600; font-size: 20px; color: var(--orange); letter-spacing: .01em; }
+h1, h2 { margin: 0; font-weight: 800; letter-spacing: -.02em; text-wrap: balance; line-height: 1.05; }
+h1 { font-size: 64px; }
+h2 { font-size: 50px; }
+.mono { font-family: var(--mono); }
+code, .code { font-family: var(--mono); }
+.g { color: var(--green); font-weight: 700; }
+.o { color: var(--orange); }
+p { margin: 0; font-size: 22px; line-height: 1.45; color: var(--ink); }
+.muted { color: var(--muted); }
+
+.cols { display: grid; grid-template-columns: 1.45fr 1fr; gap: 36px; flex: 1; min-height: 0; }
+.cols > * { min-width: 0; }
+.side { display: flex; flex-direction: column; gap: 18px; padding-top: 4px; }
+.side p { font-size: 21px; }
+
+.term { font-variant-ligatures: none; background: var(--term); color: var(--term-ink); border-radius: 10px; padding: 20px 22px; font-family: var(--mono); font-size: 15.5px; line-height: 1.55; white-space: pre; overflow: hidden; }
+.term .p { color: #f7a26b; user-select: none; }
+.term .c { color: var(--term-dim); }
+.term .ok { color: #4cc97a; font-weight: 700; }
+.term .bad { color: #ff6b6b; font-weight: 700; }
+.term.dense { font-size: 13.5px; line-height: 1.45; }
+.term .hl { color: #fff; font-weight: 700; background: rgba(240, 90, 26, .28); border-radius: 3px; padding: 0 3px; }
+.card { font-variant-ligatures: none; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; font-family: var(--mono); font-size: 16px; line-height: 1.6; white-space: pre; overflow: hidden; }
+
+footer.slot { position: absolute; left: 72px; right: 72px; bottom: 30px; display: flex; justify-content: space-between; align-items: center; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
+footer.slot b { color: var(--ink); font-weight: 600; }
+
+/* title */
+.s-title { padding-right: 420px; justify-content: center; gap: 26px; }
+.s-title h1 { font-size: 66px; }
+.s-title .why { font-size: 88px; font-weight: 800; color: var(--orange); letter-spacing: -.03em; line-height: 1; }
+.s-title .who { font-size: 26px; font-weight: 600; }
+.s-title .who span { font-family: var(--mono); font-weight: 400; color: var(--muted); font-size: 22px; }
+.band { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; background: var(--orange); overflow: hidden; }
+.band pre { margin: 0; position: absolute; left: 34px; right: 20px; top: 70px; font-family: var(--mono); font-size: 19px; line-height: 1.75; color: #fff; opacity: .95; }
+.band pre i { font-style: normal; opacity: .6; }
+.band .big { position: absolute; left: 30px; bottom: 40px; font-family: var(--mono); font-weight: 700; font-size: 120px; color: rgba(255, 255, 255, .22); letter-spacing: -.04em; line-height: 1; }
+
+/* boarding pass */
+.pass { display: grid; grid-template-columns: 1fr 250px; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; margin-top: 8px; box-shadow: 0 18px 40px -26px rgba(20, 21, 24, .35); }
+.pass .main { padding: 28px 34px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px 28px; }
+.pass .stub { background: var(--orange-soft); border-left: 2px dashed var(--orange); padding: 28px 26px; display: flex; flex-direction: column; gap: 14px; }
+.f label { display: block; font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.f div { font-size: 30px; font-weight: 700; }
+.f div.m { font-family: var(--mono); font-size: 21px; font-weight: 600; }
+.f.wide { grid-column: span 3; }
+.route { grid-column: span 3; display: flex; align-items: center; gap: 22px; }
+.route .code3 { font-size: 64px; font-weight: 800; letter-spacing: -.02em; }
+.route .arrow { flex: 1; height: 2px; background: repeating-linear-gradient(90deg, var(--orange) 0 10px, transparent 10px 18px); position: relative; }
+.route .arrow::after { content: "✈"; position: absolute; left: 50%; top: -19px; font-size: 28px; color: var(--orange); transform: translateX(-50%); }
+
+/* REPL */
+.repl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; flex: 1; align-items: start; margin-top: 8px; }
+.repl > div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.repl .L { font-size: 96px; font-weight: 800; line-height: .9; color: var(--orange); }
+.repl h3 { margin: 0; font-size: 28px; font-weight: 700; }
+.repl p { font-size: 18px; }
+.repl code { font-size: 16px; color: var(--green); font-weight: 600; }
+
+/* close */
+.s-close { padding-right: 440px; }
+.s-close .band { width: 380px; display: grid; place-items: center; }
+.qrcard { background: #ffffff; border-radius: 14px; padding: 30px; width: 300px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 14px; box-shadow: 0 20px 40px -24px rgba(0, 0, 0, .45); }
+.qrcard .qr { width: 240px; height: 240px; display: block; }
+.qrcard span { font-family: var(--mono); font-size: 16px; font-weight: 600; color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 12px; }
+.chip { font-family: var(--mono); font-size: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; }
+.chip b { color: var(--green); }
+.end { font-size: 76px; font-weight: 800; letter-spacing: -.03em; line-height: 1.02; }
+.end span { color: var(--orange); }
+
+/* presenter timer */
+.timer { position: fixed; right: 14px; top: 12px; z-index: 5; font: 600 13px/1 var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.timer.run { color: var(--ink); }
+.timer.late { color: #fff; background: var(--red); border-color: var(--red); }
+.timer:focus-visible, .nav button:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--orange); width: 0; z-index: 4; transition: width .3s; }
+.nav { position: fixed; right: 14px; top: 46px; z-index: 5; display: flex; gap: 6px; }
+.nav button { font: 600 14px/1 var(--display); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; width: 34px; height: 30px; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .progress { transition: none; } }
+</style>
+
+<div class="viewport" id="viewport">
+<div class="stage" id="stage">
+
+<!-- 1 · title -->
+<section class="slide s-title" data-start="0:00" data-end="0:15" data-label="title">
+  <div class="kicker">PromCon EU 2026 · lightning talk</div>
+  <h1>promql-cli, a full PromQL cli-only engine&nbsp;✨</h1>
+  <div class="why">.. but WHY?!</div>
+  <div class="who">JuanJo Ciarlante <span>@jjo</span></div>
+  <div class="band" aria-hidden="true">
+<pre><i>$</i> promql-cli query
+<i>&gt;</i> .scrape $NODE 2 5s
+<i>&gt;</i> rate(node_cpu<i>&lt;TAB&gt;</i>
+<i>&gt;</i> .save incident.prom
+<i>&gt;</i> .pinat node_load1
+<i>&gt;</i> robust_zscore(…)
+<i>&gt;</i> quit</pre>
+    <div class="big">&gt;_</div>
+  </div>
+</section>
+
+<!-- 2 · the flight -->
+<section class="slide" data-start="0:15" data-end="0:30" data-label="the flight" hidden>
+  <div class="kicker">Origin story</div>
+  <h2>12 hours. No Wi-Fi.<br>Lots of PromQL in mind… and <span class="o">at hand</span>.</h2>
+  <div class="pass">
+    <div class="main">
+      <div class="route"><div class="code3">PROD</div><div class="arrow"></div><div class="code3">P42</div></div>
+      <div class="f"><label>Passenger</label><div>a PromQL nerd</div></div>
+      <div class="f"><label>Wi-Fi</label><div>none</div></div>
+      <div class="f"><label>Prometheus</label><div>left at the gate</div></div>
+      <div class="f wide"><label>Carry-on</label><div class="m">incident.prom · 6h · 31,724 samples · 8.9 MB</div></div>
+    </div>
+    <div class="stub">
+      <div class="f"><label>Engine</label><div class="m">upstream PromQL</div></div>
+      <div class="f"><label>Storage</label><div class="m">in-memory</div></div>
+      <div class="f"><label>Gate</label><div class="m">./promql-cli</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · REPL -->
+<section class="slide" data-start="0:30" data-end="0:40" data-label="REPL" hidden>
+  <div class="kicker">What is it</div>
+  <h2>A REPL for PromQL. The real engine, not a lookalike.</h2>
+  <div class="repl">
+    <div><div class="L">R</div><h3>Read</h3><p><code>.scrape</code> an exporter, <code>.load</code> a file, <code>.prom_scrape_range</code> any Prometheus API</p></div>
+    <div><div class="L">E</div><h3>Eval</h3><p>the upstream <code>promql</code> engine over in-memory storage, experimental functions on</p></div>
+    <div><div class="L">P</div><h3>Print</h3><p>tables, <code>-o json</code>, or <code>.save</code> it all back to a <code>.prom</code> file</p></div>
+    <div><div class="L">L</div><h3>Loop</h3><p>tab completion, history, <code>.pinat</code> to freeze time, <code>| grep</code> to your shell</p></div>
+  </div>
+</section>
+
+<!-- 4 · WHY #1 -->
+<section class="slide" data-start="0:40" data-end="1:10" data-label="WHY #1" hidden>
+  <div class="kicker">WHY #1</div>
+  <h2>PromQL without a Prometheus</h2>
+  <div class="cols">
+<div class="term"><span class="p">$</span> docker run -d -p 9100:9100 prom/node-exporter
+<span class="p">$</span> promql-cli query -c \
+    <span class="hl">".scrape http://localhost:9100/metrics 2 5s"</span>
+<span class="c">Scraped (1/2): +330 metrics, +1166 samples</span>
+<span class="c">Scraped (2/2): +0 metrics, +1166 samples (total: 2332)</span>
+<span class="p">&gt;</span> .pinat node_cpu_seconds_total   <span class="c"># newest sample, ms-exact</span>
+<span class="p">&gt;</span> sort_desc(sum by (mode) (rate(node_cpu_seconds_total[1m])))
+Vector (8 samples):
+  [1] {mode="idle"}    =&gt; 1.6797
+  [2] {mode="iowait"}  =&gt; 0.2380
+  [3] {mode="user"}    =&gt; 0.0622
+  [4] {mode="nice"}    =&gt; 0.0117
+  <span class="c">…</span>
+<span class="p">&gt;</span> .metrics | grep -c node_
+287</div>
+    <div class="side">
+      <p>No server, no TSDB, no YAML. Scrape twice and <span class="g">rate()</span> just works.</p>
+      <p>Tab-completes metric names, labels and functions.</p>
+      <p class="muted">Debugging an exporter shouldn't need a Prometheus.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · WHY #2 -->
+<section class="slide" data-start="1:10" data-end="2:00" data-label="WHY #2" hidden>
+  <div class="kicker">WHY #2</div>
+  <h2>CI your exporters, with PromQL</h2>
+  <div class="cols">
+<div class="term"><span class="c"># contract: one PromQL per line, non-empty = pass,
+# the comment above it names the check</span>
+<span class="p">$</span> promql-cli check --scrape $NODE --count 2 \
+    ci/node-exporter.contract.promql
+<span class="ok">PASS</span>  it is alive, and it tells us what it is
+<span class="ok">PASS</span>  counters actually count (needs &gt;= 2 scrapes)
+<span class="ok">PASS</span>  ...and never go backwards between scrapes
+<span class="ok">PASS</span>  every CPU reports the same set of modes
+<span class="bad">FAIL</span>  cardinality budget: under 1000 node_* series
+      count({__name__=~"node_.+"}) &lt; 1000
+      got: count({__name__=~"node_.+"}) = <span class="hl">1116</span>, want &lt; 1000
+4 passed, 1 failed, 0 errors
+<span class="p">$</span> echo $?
+<span class="bad">1</span>                    <span class="c"># CI goes red, and says why</span></div>
+    <div class="side">
+      <p><span class="g">promtool check metrics</span> lints names. <span class="g">promtool test rules</span> runs on synthetic series.</p>
+      <p>Neither asserts PromQL on what your exporter <b>actually</b> serves: counters that count, no resets, a cardinality budget.</p>
+      <p class="muted">Exit 1: a check failed. Exit 2: the contract is broken. <code>--format junit</code> for your CI.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · WHY #3 -->
+<section class="slide" data-start="2:00" data-end="2:50" data-label="WHY #3" hidden>
+  <div class="kicker">WHY #3</div>
+  <h2>Prod in a file: the bug report reproducer</h2>
+  <div class="cols">
+<div class="term"><span class="c"># on the ground, with Wi-Fi: one selector, 3 metrics, 6h</span>
+<span class="p">&gt;</span> .prom_scrape_range http://localhost:19090 \
+    '{__name__=~"node_load1|\
+    node_netstat_Tcp_RetransSegs|\
+    kubelet_volume_stats_available_bytes"}' now-6h now 30s
+<span class="c">+31724 samples (total: 3 metrics, 31724 samples)</span>
+<span class="p">&gt;</span> .pinat node_load1; .save incident.prom  <span class="c"># 2 s, 8.9 MB</span>
+
+<span class="c"># ✈️ 30,000 ft, Wi-Fi off</span>
+<span class="p">$</span> promql-cli query incident.prom
+<span class="c">Pinned evaluation time: …38:47.000Z (restored from incident.prom)</span>
+<span class="p">&gt;</span> sum(rate(node_netstat_Tcp_RetransSegs[5m]))
+  =&gt; 13.45                           <span class="c"># retransmits/s, whole fleet</span>
+<span class="p">&gt;</span> topk(3, rate(node_netstat_Tcp_RetransSegs[6h]))
+  [1] {…="172.16.16.75:9100"}  =&gt; <span class="hl">3.66</span>   <span class="c"># remember .75</span>
+  [2] {…="172.16.16.76:9100"}  =&gt; 2.04
+  [3] {…="172.16.16.79:9100"}  =&gt; 1.72</div>
+    <div class="side">
+      <p>Attach <span class="g">incident.prom</span> to the issue: a reproducer, not a screenshot.</p>
+      <p>The pin travels <b>inside</b> the file (<span class="g"># promql-cli: pinat=…</span>): maintainers get the exact samples at the exact time.</p>
+      <p class="muted">Plain PromQL, nothing new yet. That comes next.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · WHY #4 -->
+<section class="slide" data-start="2:50" data-end="3:30" data-label="WHY #4" hidden>
+  <div class="kicker">WHY #4</div>
+  <h2>An engine playground, no live Prometheus touched</h2>
+  <div class="cols">
+<div class="term"><span class="c"># go.mod: build promql-cli against your Prometheus fork</span>
+replace github.com/prometheus/prometheus =&gt;
+    github.com/jjo/prometheus v0.0.0-20261005183247-88a37e36946b
+
+<span class="c"># same incident.prom: TCP retransmits, 14 nodes, 6h</span>
+<span class="p">&gt;</span> topk(1, max_over_time(zscore(
+    rate(node_netstat_Tcp_RetransSegs[5m]))[6h:30s]))
+  [1] {…="172.16.16.75:9100"}  =&gt; <span class="hl">3.55</span>    <span class="c"># under the ceiling…</span>
+<span class="p">&gt;</span> sqrt(count(node_load1) - 1)
+  =&gt; 3.61        <span class="c"># …which is sqrt(n-1)</span>
+<span class="p">&gt;</span> topk(1, max_over_time(robust_zscore(
+    rate(node_netstat_Tcp_RetransSegs[5m]))[6h:30s]))
+  [1] {…="172.16.16.75:9100"}  =&gt; <span class="hl">30.91</span>   <span class="c"># 🦄</span>
+  <span class="c"># and it has a name: topk() keeps the labels max() drops</span></div>
+    <div class="side">
+      <p>New functions from a fork, on real prod data. Nothing deployed, nothing restarted.</p>
+      <p><span class="g">.75</span> peaks at 17 retransmits/s, fleet median 2: median and MAD don't let the outlier hide itself.</p>
+      <p>11 new functions checked against plain-PromQL identities: 27 checks, worst relative error 6e-11.</p>
+      <p class="muted">Bonus catch: <code>promql.NewEngine</code> without <code>EngineOpts.Parser</code> silently disables experimental functions.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · WHY #5 -->
+<section class="slide" data-start="3:30" data-end="4:10" data-label="WHY #5" hidden>
+  <div class="kicker">WHY #5</div>
+  <h2>Alerts on prod data, before they page</h2>
+  <div class="cols">
+<div class="term dense"><span class="p">&gt;</span> !cat rules/disk.rules.yaml
+groups:
+- name: disk
+  rules:
+  - record: pvc:days_to_full:6h
+    expr: |
+      sum by (persistentvolumeclaim, namespace) (
+        time_to_threshold(kubelet_volume_stats_available_bytes[6h], 0)
+      ) / 86400 &gt; 0
+  - alert: VolumeFullSoon
+    expr: pvc:days_to_full:6h &lt; 14
+    labels: {severity: page}
+<span class="p">&gt;</span> .rules rules/disk.rules.yaml
+<span class="c">Rules: added 3 samples; 1 alerts</span>
+<span class="p">&gt;</span> sort(pvc:days_to_full:6h)                   <span class="c"># the recording rule</span>
+  [1] {…="mysql-data-mariadb-server-0"}        =&gt; <span class="hl">8.94</span>
+  [2] {…="rabbitmq-data-rabbitmq-rabbitmq-0"}  =&gt; 26782.59
+  [3] {…="storage-prometheus-stack-grafana-0"} =&gt; 6.20e+06
+<span class="p">&gt;</span> ALERTS                                      <span class="c"># the alert</span>
+  [1] {alertname="VolumeFullSoon", alertstate="firing",
+       …="<span class="hl">mysql-data-mariadb-server-0</span>", severity="page"} =&gt; 1</div>
+    <div class="side">
+      <p>An alert on a function your prod doesn't even run, fed by a recording rule, fires on prod data.</p>
+      <p>Before it ever pages anyone. <span class="g">ALERTS</span> is a real series: query it, join it, <span class="g">.save</span> it.</p>
+      <p>mariadb: ~9 days to full. Time to buy the DBA a coffee.</p>
+      <p class="muted">Evaluated at one instant (the pin): <code>for:</code> isn't modelled yet.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · close -->
+<section class="slide s-close" data-start="4:10" data-end="4:40" data-label="close" hidden>
+  <div class="kicker">Rapid fire</div>
+  <div class="chips">
+    <span class="chip"><b>promql-cli mcp</b> · a PromQL sandbox for agents</span>
+    <span class="chip"><b>-o json</b> · pipe it anywhere</span>
+    <span class="chip"><b>.at</b> / <b>.pinat &lt;metric&gt;</b> · time travel</span>
+    <span class="chip"><b>--repl=prompt</b> · completion popup</span>
+    <span class="chip"><b>xjjo/promql-cli</b> · docker image</span>
+  </div>
+  <div class="end" style="margin-top:34px">Because PromQL<br>deserves a <span>REPL</span>.</div>
+  <p class="mono" style="font-size:26px;margin-top:10px">github.com/jjo/promql-cli</p>
+  <div class="band"><div class="qrcard"><svg class="qr" viewBox="-1 -1 35 35" role="img" aria-label="QR code: github.com/jjo/promql-cli" xmlns="http://www.w3.org/2000/svg"><rect x="-1" y="-1" width="35" height="35" fill="#ffffff"/><g shape-rendering="crispEdges"><path style="stroke:#000000" transform="translate(0,0.5)" d="M0,0h1M1,0h1M2,0h1M3,0h1M4,0h1M5,0h1M6,0h1M8,0h1M10,0h1M12,0h1M13,0h1M14,0h1M17,0h1M18,0h1M19,0h1M23,0h1M24,0h1M26,0h1M27,0h1M28,0h1M29,0h1M30,0h1M31,0h1M32,0h1M0,1h1M6,1h1M8,1h1M11,1h1M15,1h1M16,1h1M17,1h1M19,1h1M22,1h1M24,1h1M26,1h1M32,1h1M0,2h1M2,2h1M3,2h1M4,2h1M6,2h1M8,2h1M9,2h1M10,2h1M12,2h1M14,2h1M18,2h1M20,2h1M21,2h1M23,2h1M24,2h1M26,2h1M28,2h1M29,2h1M30,2h1M32,2h1M0,3h1M2,3h1M3,3h1M4,3h1M6,3h1M9,3h1M14,3h1M17,3h1M19,3h1M22,3h1M23,3h1M24,3h1M26,3h1M28,3h1M29,3h1M30,3h1M32,3h1M0,4h1M2,4h1M3,4h1M4,4h1M6,4h1M9,4h1M10,4h1M11,4h1M13,4h1M14,4h1M17,4h1M18,4h1M20,4h1M21,4h1M23,4h1M26,4h1M28,4h1M29,4h1M30,4h1M32,4h1M0,5h1M6,5h1M8,5h1M11,5h1M14,5h1M17,5h1M18,5h1M19,5h1M21,5h1M24,5h1M26,5h1M32,5h1M0,6h1M1,6h1M2,6h1M3,6h1M4,6h1M5,6h1M6,6h1M8,6h1M10,6h1M12,6h1M14,6h1M16,6h1M18,6h1M20,6h1M22,6h1M24,6h1M26,6h1M27,6h1M28,6h1M29,6h1M30,6h1M31,6h1M32,6h1M8,7h1M9,7h1M10,7h1M12,7h1M13,7h1M14,7h1M17,7h1M20,7h1M21,7h1M2,8h1M3,8h1M4,8h1M6,8h1M8,8h1M11,8h1M14,8h1M17,8h1M20,8h1M22,8h1M23,8h1M25,8h1M26,8h1M27,8h1M30,8h1M31,8h1M32,8h1M1,9h1M3,9h1M4,9h1M7,9h1M8,9h1M12,9h1M13,9h1M22,9h1M23,9h1M25,9h1M26,9h1M29,9h1M32,9h1M1,10h1M2,10h1M3,10h1M5,10h1M6,10h1M9,10h1M11,10h1M12,10h1M13,10h1M14,10h1M16,10h1M21,10h1M26,10h1M27,10h1M29,10h1M30,10h1M31,10h1M0,11h1M1,11h1M4,11h1M5,11h1M7,11h1M10,11h1M13,11h1M14,11h1M15,11h1M19,11h1M20,11h1M21,11h1M22,11h1M23,11h1M30,11h1M31,11h1M32,11h1M0,12h1M1,12h1M2,12h1M5,12h1M6,12h1M9,12h1M10,12h1M13,12h1M14,12h1M15,12h1M16,12h1M18,12h1M19,12h1M20,12h1M21,12h1M23,12h1M24,12h1M25,12h1M27,12h1M28,12h1M31,12h1M3,13h1M9,13h1M10,13h1M11,13h1M14,13h1M16,13h1M18,13h1M20,13h1M23,13h1M24,13h1M25,13h1M26,13h1M27,13h1M29,13h1M32,13h1M1,14h1M2,14h1M3,14h1M5,14h1M6,14h1M8,14h1M9,14h1M11,14h1M13,14h1M14,14h1M16,14h1M18,14h1M19,14h1M22,14h1M24,14h1M26,14h1M27,14h1M29,14h1M30,14h1M31,14h1M0,15h1M1,15h1M5,15h1M7,15h1M9,15h1M10,15h1M11,15h1M14,15h1M15,15h1M17,15h1M18,15h1M19,15h1M20,15h1M21,15h1M22,15h1M23,15h1M24,15h1M26,15h1M28,15h1M29,15h1M30,15h1M31,15h1M2,16h1M5,16h1M6,16h1M7,16h1M10,16h1M13,16h1M14,16h1M15,16h1M16,16h1M18,16h1M19,16h1M25,16h1M27,16h1M28,16h1M29,16h1M0,17h1M2,17h1M3,17h1M4,17h1M7,17h1M8,17h1M9,17h1M13,17h1M14,17h1M16,17h1M17,17h1M18,17h1M19,17h1M21,17h1M23,17h1M24,17h1M26,17h1M32,17h1M1,18h1M4,18h1M5,18h1M6,18h1M8,18h1M9,18h1M10,18h1M12,18h1M15,18h1M18,18h1M20,18h1M25,18h1M26,18h1M27,18h1M28,18h1M30,18h1M31,18h1M2,19h1M3,19h1M5,19h1M9,19h1M12,19h1M17,19h1M19,19h1M20,19h1M21,19h1M22,19h1M23,19h1M24,19h1M25,19h1M27,19h1M28,19h1M29,19h1M30,19h1M31,19h1M32,19h1M1,20h1M6,20h1M7,20h1M11,20h1M13,20h1M15,20h1M17,20h1M18,20h1M19,20h1M22,20h1M24,20h1M25,20h1M27,20h1M28,20h1M29,20h1M31,20h1M32,20h1M0,21h1M2,21h1M8,21h1M9,21h1M11,21h1M12,21h1M14,21h1M15,21h1M21,21h1M23,21h1M26,21h1M32,21h1M0,22h1M2,22h1M5,22h1M6,22h1M9,22h1M10,22h1M13,22h1M14,22h1M15,22h1M17,22h1M27,22h1M29,22h1M30,22h1M31,22h1M0,23h1M2,23h1M3,23h1M4,23h1M8,23h1M9,23h1M10,23h1M11,23h1M16,23h1M17,23h1M21,23h1M23,23h1M24,23h1M29,23h1M30,23h1M31,23h1M32,23h1M0,24h1M3,24h1M6,24h1M7,24h1M8,24h1M9,24h1M11,24h1M12,24h1M16,24h1M20,24h1M22,24h1M24,24h1M25,24h1M26,24h1M27,24h1M28,24h1M29,24h1M31,24h1M32,24h1M8,25h1M9,25h1M10,25h1M12,25h1M13,25h1M14,25h1M16,25h1M17,25h1M18,25h1M20,25h1M24,25h1M28,25h1M29,25h1M32,25h1M0,26h1M1,26h1M2,26h1M3,26h1M4,26h1M5,26h1M6,26h1M9,26h1M10,26h1M12,26h1M13,26h1M14,26h1M17,26h1M18,26h1M20,26h1M22,26h1M23,26h1M24,26h1M26,26h1M28,26h1M29,26h1M31,26h1M0,27h1M6,27h1M10,27h1M11,27h1M15,27h1M16,27h1M17,27h1M18,27h1M19,27h1M20,27h1M24,27h1M28,27h1M29,27h1M30,27h1M31,27h1M32,27h1M0,28h1M2,28h1M3,28h1M4,28h1M6,28h1M8,28h1M9,28h1M10,28h1M11,28h1M13,28h1M16,28h1M17,28h1M21,28h1M22,28h1M24,28h1M25,28h1M26,28h1M27,28h1M28,28h1M31,28h1M32,28h1M0,29h1M2,29h1M3,29h1M4,29h1M6,29h1M8,29h1M9,29h1M10,29h1M11,29h1M12,29h1M15,29h1M16,29h1M19,29h1M21,29h1M23,29h1M25,29h1M28,29h1M30,29h1M32,29h1M0,30h1M2,30h1M3,30h1M4,30h1M6,30h1M8,30h1M9,30h1M10,30h1M14,30h1M15,30h1M16,30h1M18,30h1M20,30h1M21,30h1M22,30h1M23,30h1M25,30h1M26,30h1M29,30h1M30,30h1M0,31h1M6,31h1M9,31h1M10,31h1M13,31h1M14,31h1M15,31h1M17,31h1M18,31h1M19,31h1M20,31h1M25,31h1M27,31h1M29,31h1M30,31h1M0,32h1M1,32h1M2,32h1M3,32h1M4,32h1M5,32h1M6,32h1M9,32h1M11,32h1M14,32h1M15,32h1M17,32h1M20,32h1M23,32h1M24,32h1M25,32h1M31,32h1"/></g><circle cx="16.5" cy="16.5" r="5.3" fill="#ffffff"/><g transform="translate(12.2000 12.2497) scale(0.074567)"><path fill="#e6522c" d="M 56.667,0.667 C 25.372,0.667 0,26.036 0,57.332 c 0,31.295 25.372,56.666 56.667,56.666 31.295,0 56.666,-25.371 56.666,-56.666 0,-31.296 -25.372,-56.665 -56.666,-56.665 z m 0,106.055 c -8.904,0 -16.123,-5.948 -16.123,-13.283 H 72.79 c 0,7.334 -7.219,13.283 -16.123,13.283 z M 83.297,89.04 H 30.034 V 79.382 H 83.298 V 89.04 Z M 83.106,74.411 H 30.186 C 30.01,74.208 29.83,74.008 29.66,73.802 24.208,67.182 22.924,63.726 21.677,60.204 c -0.021,-0.116 6.611,1.355 11.314,2.413 0,0 2.42,0.56 5.958,1.205 -3.397,-3.982 -5.414,-9.044 -5.414,-14.218 0,-11.359 8.712,-21.285 5.569,-29.308 3.059,0.249 6.331,6.456 6.552,16.161 3.252,-4.494 4.613,-12.701 4.613,-17.733 0,-5.21 3.433,-11.262 6.867,-11.469 -3.061,5.045 0.793,9.37 4.219,20.099 1.285,4.03 1.121,10.812 2.113,15.113 C 63.797,33.534 65.333,20.5 71,16 c -2.5,5.667 0.37,12.758 2.333,16.167 3.167,5.5 5.087,9.667 5.087,17.548 0,5.284 -1.951,10.259 -5.242,14.148 3.742,-0.702 6.326,-1.335 6.326,-1.335 l 12.152,-2.371 c 10e-4,-10e-4 -1.765,7.261 -8.55,14.254 z"/></g></svg><span>github.com/jjo/promql-cli</span></div></div>
+</section>
+
+</div>
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="nav"><button id="prev" aria-label="Previous slide">‹</button><button id="next" aria-label="Next slide">›</button></div>
+<button class="timer" id="timer" title="T: start/pause · R: reset">T · timer</button>
+
+<script>
+(() => {
+  const stage = document.getElementById('stage');
+  const slides = [...document.querySelectorAll('.slide')];
+  const timer = document.getElementById('timer');
+  const progress = document.getElementById('progress');
+  const LIMIT = 300; // hard lightning-talk limit, seconds
+  const sec = s => { const [m, x] = s.split(':').map(Number); return m * 60 + x; };
+  let i = 0, t0 = null, acc = 0, tick = null;
+
+  slides.forEach((s, n) => {
+    const f = document.createElement('footer');
+    f.className = 'slot';
+    f.innerHTML = `<span><b>${s.dataset.label}</b> · ${s.dataset.start}–${s.dataset.end}</span><span>${n + 1} / ${slides.length}</span>`;
+    s.appendChild(f);
+  });
+
+  function fit() {
+    const k = Math.min(innerWidth / 1280, innerHeight / 720);
+    stage.style.setProperty('--k', k);
+  }
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, j) => { s.hidden = j !== i; });
+    progress.style.width = `${(i + 1) / slides.length * 100}%`;
+    try { history.replaceState(null, '', `#s${i + 1}`); } catch (e) {}
+    paint();
+  }
+  const elapsed = () => acc + (t0 ? (Date.now() - t0) / 1000 : 0);
+  const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  function paint() {
+    const e = elapsed();
+    if (!t0 && !acc) { timer.textContent = 'T · timer'; timer.className = 'timer'; return; }
+    const end = sec(slides[i].dataset.end);
+    timer.textContent = `${fmt(e)} / ${slides[i].dataset.end}  ·  ${fmt(Math.max(0, LIMIT - e))} left`;
+    timer.className = 'timer' + (t0 ? ' run' : '') + (e > end ? ' late' : '');
+  }
+  function toggle() {
+    if (t0) { acc = elapsed(); t0 = null; clearInterval(tick); }
+    else { t0 = Date.now(); tick = setInterval(paint, 250); }
+    paint();
+  }
+  function reset() { t0 = null; acc = 0; clearInterval(tick); paint(); }
+
+  addEventListener('resize', fit);
+  addEventListener('keydown', e => {
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); show(i + 1); }
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); show(i - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 't' || e.key === 'T') toggle();
+    else if (e.key === 'r' || e.key === 'R') reset();
+  });
+  document.getElementById('prev').addEventListener('click', () => show(i - 1));
+  document.getElementById('next').addEventListener('click', () => show(i + 1));
+  timer.addEventListener('click', toggle);
+  let x0 = null;
+  addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1));
+    x0 = null;
+  });
+
+  fit();
+  const m = /^#s(\d+)$/.exec(location.hash);
+  show(m ? Number(m[1]) - 1 : 0);
+})();
+</script>

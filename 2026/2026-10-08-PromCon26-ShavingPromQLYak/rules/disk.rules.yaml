@@ -1,0 +1,11 @@
+groups:
+- name: disk
+  rules:
+  - record: pvc:days_to_full:6h
+    expr: |
+      sum by (persistentvolumeclaim, namespace) (
+        time_to_threshold(kubelet_volume_stats_available_bytes[6h], 0)
+      ) / 86400 > 0
+  - alert: VolumeFullSoon
+    expr: pvc:days_to_full:6h < 14
+    labels: {severity: page}

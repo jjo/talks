@@ -1,0 +1,17 @@
+# node-exporter metrics contract: every expression must return a non-empty result.
+# Violations are written as absent(<bad thing>) so that "nothing bad" is non-empty.
+
+# it is alive, and it tells us what it is
+node_exporter_build_info{version!=""}
+
+# counters actually count (needs >= 2 scrapes)
+sum(rate(node_cpu_seconds_total[1m])) > 0
+
+# ...and never go backwards between scrapes
+absent(resets(node_cpu_seconds_total[1m]) > 0)
+
+# every CPU reports the same set of modes
+absent(count by (cpu) (node_cpu_seconds_total) != scalar(max(count by (cpu) (node_cpu_seconds_total))))
+
+# cardinality budget: under 1000 node_* series
+count({__name__=~"node_.+"}) < 1000
